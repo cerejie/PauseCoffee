@@ -1,0 +1,9 @@
+export const productOptionsModalKey = "product-options-modal";
+export const cartLineEditModalKey = "cart-line-edit-modal";
+export const orderTicketModalKey = "order-ticket-modal";
+export const orderCancelModalKey = "order-cancel-modal";
+export const adminProductFormModalKey = "admin-product-form-modal";
+export const adminCategoryFormModalKey = "admin-category-form-modal";
+export const adminAddonFormModalKey = "admin-addon-form-modal";
+export const adminConfirmModalKey = "admin-confirm-modal";
+export const adminSizeFormModalKey = "admin-size-form-modal";
