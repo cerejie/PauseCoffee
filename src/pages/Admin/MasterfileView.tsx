@@ -14,7 +14,7 @@ const MasterfileView = () => (
     items={[
       { key: "menu", label: "Menu", children: <ProductTable /> },
       { key: "categories", label: "Categories", children: <CategoryTable /> },
-      { key: "sizes", label: "Sizes", children: <SizeTable /> },
+      { key: "sizes", label: "Sizes & types", children: <SizeTable /> },
       { key: "addons", label: "Add-ons", children: <AddonTable /> },
     ]}
   />

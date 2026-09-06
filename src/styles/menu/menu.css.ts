@@ -1,10 +1,13 @@
-import { style } from "@vanilla-extract/css";
+import { createVar, fallbackVar, keyframes, style } from "@vanilla-extract/css";
 import {
   accent,
+  accentInk,
+  accentOn,
   accentSoft,
   colorBorder,
   colorBorderSoft,
   colorCanvasDeep,
+  colorCanvasVeil,
   colorEspresso,
   colorPrimary,
   colorSurface,
@@ -19,6 +22,7 @@ import {
   radiusSm,
   shadowLifted,
   shadowSoft,
+  stickyHeaderHeight,
 } from "../common/vars.css";
 
 // ---------------------------------------------------------------------- hero
@@ -61,50 +65,111 @@ export const heroSearch = style({
 
 // ------------------------------------------------------------- category rail
 
+/// Where the docked chrome ends. The header measures itself into
+/// stickyHeaderHeight; the fallback only covers the first paint.
+const railTop = fallbackVar(stickyHeaderHeight, "68px");
+
+/// Geometry of the active chip, measured by CategoryRail and handed back in.
+export const railThumbX = createVar();
+export const railThumbWidth = createVar();
+
 export const rail = style({
   position: "sticky",
-  top: 68,
+  top: railTop,
   zIndex: 15,
   display: "flex",
-  gap: 8,
   overflowX: "auto",
-  padding: "12px 0",
+  overscrollBehaviorX: "contain",
+  padding: "10px 0",
   margin: "0 -20px",
   paddingInline: 20,
   scrollbarWidth: "none",
-  backgroundColor: "rgba(251, 246, 236, 0.9)",
-  backdropFilter: "blur(10px)",
-  WebkitBackdropFilter: "blur(10px)",
+  backgroundColor: colorCanvasVeil,
+  backdropFilter: "saturate(180%) blur(12px)",
+  WebkitBackdropFilter: "saturate(180%) blur(12px)",
+  // Grows in as the rail docks, so the band reads as a layer over the menu
+  // rather than a strip that was always there.
+  borderBottom: "1px solid transparent",
+  transition: "border-color .24s ease, box-shadow .24s ease",
   selectors: {
     "&::-webkit-scrollbar": { display: "none" },
   },
+  "@media": {
+    "screen and (max-width: 640px)": {
+      margin: "0 -16px",
+      paddingInline: 16,
+    },
+  },
+});
+
+export const railPinned = style({
+  borderBottomColor: colorBorderSoft,
+  boxShadow: "0 12px 26px -20px rgba(59, 35, 23, 0.6)",
+});
+
+/// The chips share one track so the indicator can travel behind all of them
+/// without an opaque neighbour cutting it in half mid-slide.
+export const railTrack = style({
+  position: "relative",
+  display: "inline-flex",
+  gap: 2,
+  padding: 4,
+  borderRadius: radiusPill,
+  border: `1px solid ${colorBorderSoft}`,
+  backgroundColor: colorSurfaceAlt,
+});
+
+export const railThumb = style({
+  position: "absolute",
+  insetBlock: 4,
+  left: 0,
+  width: railThumbWidth,
+  borderRadius: radiusPill,
+  backgroundColor: accent,
+  boxShadow: shadowSoft,
+  pointerEvents: "none",
+  transform: `translateX(${railThumbX})`,
+  // The travel is the whole point: scrolling the menu glides the pill between
+  // categories instead of snapping it, so the rail reads as one moving thing.
+  transition:
+    "transform .34s cubic-bezier(.22,1,.36,1), width .34s cubic-bezier(.22,1,.36,1), background-color .34s ease, opacity .2s ease",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": { transition: "opacity .2s ease" },
+  },
+});
+
+/// Before the first measurement there is nowhere honest to put it.
+export const railThumbHidden = style({
+  opacity: 0,
 });
 
 export const railChip = style({
+  position: "relative",
+  zIndex: 1,
   flexShrink: 0,
   display: "inline-flex",
   alignItems: "center",
   gap: 7,
-  padding: "9px 16px",
+  padding: "8px 15px",
   borderRadius: radiusPill,
-  border: `1px solid ${colorBorder}`,
-  backgroundColor: colorSurface,
+  border: "none",
+  background: "none",
   color: colorTextBody,
   fontSize: 13.5,
   fontWeight: 600,
   whiteSpace: "nowrap",
   cursor: "pointer",
-  transition: "all .18s ease",
+  transition: "color .22s ease",
   selectors: {
-    "&:hover": { borderColor: accent, color: colorTextHeading },
+    "&:hover": { color: colorTextHeading },
   },
 });
 
 export const railChipActive = style({
-  borderColor: "transparent",
-  backgroundColor: accent,
-  color: colorSurface,
-  boxShadow: shadowSoft,
+  color: accentOn,
+  selectors: {
+    "&:hover": { color: accentOn },
+  },
 });
 
 export const railDot = style({
@@ -112,17 +177,30 @@ export const railDot = style({
   height: 7,
   borderRadius: radiusPill,
   backgroundColor: accent,
+  transition: "background-color .22s ease, transform .22s ease",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": { transition: "none" },
+  },
 });
 
 export const railDotActive = style({
-  backgroundColor: "rgba(255,255,255,0.85)",
+  backgroundColor: accentOn,
+  opacity: 0.85,
+  transform: "scale(1.15)",
 });
 
 // ------------------------------------------------------------------ sections
 
 export const section = style({
-  scrollMarginTop: 128,
+  // Only the browser's own anchor jumps land here — a tapped chip is placed by
+  // useCategoryScrollHook against the rail's measured edge.
+  scrollMarginTop: `calc(${railTop} + 62px)`,
   paddingTop: 30,
+});
+
+const headingRise = keyframes({
+  from: { opacity: 0, transform: "translateY(14px)" },
+  to: { opacity: 1, transform: "translateY(0)" },
 });
 
 export const sectionHead = style({
@@ -130,6 +208,25 @@ export const sectionHead = style({
   alignItems: "baseline",
   gap: 12,
   marginBottom: 4,
+  // Tied to the scroll position rather than to a timer, so the heading rises as
+  // the customer swipes and reverses if they swipe back. Opted into rather than
+  // out of: an `@supports` block outranks the `reduce` override by source order,
+  // so the calm-motion case has to be the one that never declares it. Browsers
+  // without scroll-driven animations simply show the heading.
+  "@media": {
+    "(prefers-reduced-motion: no-preference)": {
+      "@supports": {
+        "(animation-timeline: view())": {
+          animationName: headingRise,
+          animationFillMode: "both",
+          animationTimingFunction: "linear",
+          animationDuration: "1ms",
+          animationTimeline: "view()",
+          animationRange: "entry 10% cover 16%",
+        },
+      },
+    },
+  },
 });
 
 export const sectionTitle = style({
@@ -150,7 +247,7 @@ export const sectionRule = style({
 export const sectionCount = style({
   fontSize: 12,
   fontWeight: 600,
-  color: accent,
+  color: accentInk,
   padding: "3px 9px",
   borderRadius: radiusPill,
   backgroundColor: accentSoft,
@@ -243,7 +340,7 @@ export const cardBadge = style({
   textTransform: "uppercase",
   padding: "3px 8px",
   borderRadius: radiusPill,
-  color: accent,
+  color: accentInk,
   backgroundColor: accentSoft,
 });
 

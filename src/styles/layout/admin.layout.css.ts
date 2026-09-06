@@ -3,8 +3,16 @@ import {
   colorBorder,
   colorBorderSoft,
   colorCanvas,
+  colorCanvasVeil,
   colorEspresso,
+  colorEspressoWash,
+  colorOnEspresso,
+  colorOnEspressoFaint,
+  colorOnEspressoLine,
+  colorOnEspressoMuted,
+  colorOnEspressoWash,
   colorPrimary,
+  colorSuccess,
   colorSurface,
   colorTextHeading,
   colorTextMuted,
@@ -37,7 +45,7 @@ export const sider = style({
   gap: 6,
   padding: "20px 14px",
   backgroundColor: colorEspresso,
-  color: "#EADFCF",
+  color: colorOnEspresso,
   position: "sticky",
   top: 0,
   height: "100dvh",
@@ -59,14 +67,14 @@ export const navItem = style({
   gap: 11,
   padding: "11px 13px",
   borderRadius: radiusMd,
-  color: "rgba(234,223,207,0.72)",
+  color: colorOnEspressoMuted,
   fontSize: 14,
   fontWeight: 600,
   textDecoration: "none",
   cursor: "pointer",
   transition: "background-color .16s ease, color .16s ease",
   selectors: {
-    "&:hover": { backgroundColor: "rgba(255,255,255,0.06)", color: "#F7EFE3" },
+    "&:hover": { backgroundColor: colorOnEspressoWash, color: colorOnEspresso },
   },
 });
 
@@ -84,7 +92,7 @@ export const navBadge = style({
   height: 20,
   padding: "0 6px",
   borderRadius: radiusPill,
-  backgroundColor: "rgba(255,255,255,0.16)",
+  backgroundColor: colorOnEspressoLine,
   fontSize: 11,
   fontWeight: 700,
   display: "grid",
@@ -92,13 +100,13 @@ export const navBadge = style({
 });
 
 export const navBadgeActive = style({
-  backgroundColor: "rgba(59,35,23,0.16)",
+  backgroundColor: colorEspressoWash,
 });
 
 export const siderFooter = style({
   marginTop: "auto",
   paddingTop: 14,
-  borderTop: "1px solid rgba(255,255,255,0.1)",
+  borderTop: `1px solid ${colorOnEspressoLine}`,
 });
 
 /// The account block at the foot of the sider. It is a button, not a label —
@@ -118,14 +126,14 @@ globalStyle(`${siderUser}.ant-btn`, {
   boxShadow: "none",
   borderRadius: radiusMd,
   background: "transparent",
-  color: "#EADFCF",
+  color: colorOnEspresso,
   textAlign: "left",
   minWidth: 0,
 });
 
 globalStyle(`${siderUser}.ant-btn:not(:disabled):hover`, {
-  background: "rgba(255,255,255,0.08)",
-  color: "#F7EFE3",
+  background: colorOnEspressoWash,
+  color: colorOnEspresso,
 });
 
 export const siderAvatar = style({
@@ -161,7 +169,7 @@ export const siderUserName = style({
 
 export const siderUserRole = style({
   fontSize: 10.5,
-  opacity: 0.55,
+  color: colorOnEspressoFaint,
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -170,7 +178,7 @@ export const siderUserRole = style({
 export const siderUserCaret = style({
   flexShrink: 0,
   fontSize: 10,
-  opacity: 0.5,
+  color: colorOnEspressoFaint,
 });
 
 /// The dropdown renders in a portal, outside the root that carries the style
@@ -203,7 +211,7 @@ export const header = style({
   gap: 14,
   padding: "14px 24px",
   paddingTop: "max(14px, env(safe-area-inset-top))",
-  backgroundColor: "rgba(251,246,236,0.86)",
+  backgroundColor: colorCanvasVeil,
   backdropFilter: "blur(12px)",
   WebkitBackdropFilter: "blur(12px)",
   borderBottom: `1px solid ${colorBorderSoft}`,
@@ -256,7 +264,7 @@ export const liveDot = style({
 });
 
 export const liveDotOn = style({
-  backgroundColor: "#3F8F5B",
+  backgroundColor: colorSuccess,
   animation: `${blink} 2s ease-in-out infinite`,
 });
 
@@ -294,7 +302,7 @@ export const tabItem = style({
   gap: 3,
   padding: "8px 4px",
   borderRadius: radiusPill,
-  color: "rgba(234,223,207,0.7)",
+  color: colorOnEspressoMuted,
   fontSize: 10.5,
   fontWeight: 600,
   textDecoration: "none",

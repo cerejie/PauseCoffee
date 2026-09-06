@@ -100,6 +100,46 @@ export const useProductListHook = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (product: IProduct) => adminServices.deleteProduct(product),
+
+    onSuccess: (_result, product) => {
+      void queryClient.invalidateQueries({ queryKey: [adminProductsQueryKey] });
+      void queryClient.invalidateQueries({ queryKey: [menuQueryKey] });
+
+      notification.success({
+        message: `${product.name} deleted`,
+        placement: "bottomRight",
+      });
+    },
+
+    onError: (error) => {
+      notification.error({
+        message: "Couldn't delete that item",
+        description: supabaseError(error),
+      });
+    },
+  });
+
+  /// Hard delete, deliberately spelled out: the switch beside it is the
+  /// reversible option, and a barista reaching for the bin should be told that
+  /// before the row is gone rather than after.
+  const remove = useCallback(
+    (product: IProduct) => {
+      confirm.confirm({
+        title: `Delete ${product.name}?`,
+        content:
+          "The item, its prices and its photo go for good. Orders already placed keep their own copy, so past receipts still read correctly. To take it off the menu for a while, use the On menu switch instead.",
+        okText: "Delete it",
+        cancelText: "Cancel",
+        okButtonProps: { danger: true },
+        centered: true,
+        onOk: () => deleteMutation.mutateAsync(product),
+      });
+    },
+    [confirm, deleteMutation],
+  );
+
   const toggleActive = useCallback(
     (product: IProduct) => {
       if (product.is_active) {
@@ -136,5 +176,9 @@ export const useProductListHook = () => {
     openForm: (product?: IProduct) => openModal(product),
     toggleActive,
     isToggling: activeMutation.isPending,
+    remove,
+    /// The row being deleted, not a flag — a shared boolean would spin every
+    /// bin in the table at once.
+    removingId: deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null,
   };
 };

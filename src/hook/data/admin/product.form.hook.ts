@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Form } from "antd";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { MenuGroupEnum } from "../../../enums/menu.group.enum";
+import { MenuGroupEnum, menuGroupLabels } from "../../../enums/menu.group.enum";
 import { adminProductFormModalKey } from "../../../keys/modal.keys";
 import {
   adminCategoriesQueryKey,
@@ -80,12 +80,22 @@ export const useProductFormHook = () => {
       : undefined) ??
     MenuGroupEnum.Drinks;
 
+  /// Every category, grouped under the menu it belongs to, rather than only the
+  /// ones matching a menu picked further up the form. Filtering them left the
+  /// picker empty and disabled the moment a menu had no categories yet — which
+  /// is exactly the state a shop is in when it adds its first food item, and no
+  /// way out of it from inside the form.
   const categoryOptions = useMemo(
     () =>
-      categories
-        .filter((category) => category.menu_group === group)
-        .map((category) => ({ value: category.id, label: category.name })),
-    [categories, group],
+      Object.values(MenuGroupEnum)
+        .map((menuGroup) => ({
+          label: menuGroupLabels[menuGroup],
+          options: categories
+            .filter((category) => category.menu_group === menuGroup)
+            .map((category) => ({ value: category.id, label: category.name })),
+        }))
+        .filter((entry) => entry.options.length > 0),
+    [categories],
   );
 
   /// A size with no group is offered everywhere — 12oz is a drinks size, but
@@ -133,13 +143,26 @@ export const useProductFormHook = () => {
     if (modal.visible) uploadedPaths.current = [];
   }, [modal.visible]);
 
-  /// Switching group invalidates whatever was picked under the old one.
-  const onGroupChange = () => {
-    form.setFieldsValue({
-      category_id: "",
-      sizes: [{ size_id: "", label: "", price: 0, sort_order: 1 }],
-    });
-  };
+  /// The category carries the menu group, so picking one settles which menu the
+  /// item is on and which vocabulary the price rows use. Crossing between the
+  /// two menus starts those rows over: a 16oz means nothing on a cookie.
+  const onCategoryChange = useCallback(
+    (categoryId: string) => {
+      const next =
+        categories.find((row) => row.id === categoryId)?.menu_group ??
+        MenuGroupEnum.Drinks;
+      const previous = form.getFieldValue("menu_group");
+
+      form.setFieldsValue({ menu_group: next });
+
+      if (previous && previous !== next) {
+        form.setFieldsValue({
+          sizes: [{ size_id: "", label: "", price: 0, sort_order: 1 }],
+        });
+      }
+    },
+    [categories, form],
+  );
 
   const mutation = useMutation({
     mutationFn: (values: IProductRequest) =>
@@ -192,10 +215,13 @@ export const useProductFormHook = () => {
     visible: modal.visible,
     isEditing: Boolean(editing),
     isSaving: mutation.isPending,
+    /// Drinks or food, settled by the chosen category — the item form asks for
+    /// sizes or types off the back of it.
+    menuGroup: group,
     categoryOptions,
     sizeOptions,
     hasCategories: categories.length > 0,
-    onGroupChange,
+    onCategoryChange,
     trackUpload,
     close: () => {
       discardImages(uploadedPaths.current);

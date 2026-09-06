@@ -1,10 +1,9 @@
-import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import {
   Button,
   Form,
   Input,
   InputNumber,
-  Modal,
   Select,
   Switch,
   Tag,
@@ -13,6 +12,8 @@ import {
 } from "antd";
 import { useMemo } from "react";
 import CardTable from "../../common/table/CardTable";
+import FormModal from "../../common/modal/FormModal";
+import RowActions from "../../common/table/cells/RowActions";
 import { useAddonListHook } from "../../../hook/data/admin/addon.list.hook";
 import type { IAddon } from "../../../models/data/menu/menu.response";
 import { formatPeso } from "../../../utils/formatter.utils";
@@ -27,6 +28,8 @@ type AddonRow = IAddon & { categoryNames: string[] };
 const AddonTable = () => {
   const {
     rows,
+    remove,
+    removingId,
     categoryOptions,
     isLoading,
     isFetching,
@@ -79,18 +82,16 @@ const AddonTable = () => {
         key: "actions",
         align: "right",
         render: (_value, record) => (
-          <Tooltip title="Edit">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => openForm(record)}
-              aria-label={`Edit ${record.name}`}
-            />
-          </Tooltip>
+          <RowActions
+            label={record.name}
+            onEdit={() => openForm(record)}
+            onDelete={() => remove(record)}
+            deleting={removingId === record.id}
+          />
         ),
       },
     ],
-    [openForm],
+    [openForm, remove, removingId],
   );
 
   return (
@@ -118,16 +119,16 @@ const AddonTable = () => {
         pagination={false}
       />
 
-      <Modal
+      <FormModal
         open={visible}
-        onCancel={close}
         title={isEditing ? "Edit add-on" : "New add-on"}
-        centered
-        width={420}
-        destroyOnHidden
-        okText={isEditing ? "Save changes" : "Add it"}
-        confirmLoading={isSaving}
-        onOk={() => form.submit()}
+        subtitle="A paid extra the options drawer offers on the categories you pick."
+        width={480}
+        saving={isSaving}
+        submitText={isEditing ? "Save changes" : "Add add-on"}
+        submitIcon={isEditing ? undefined : <PlusOutlined />}
+        onCancel={close}
+        onSubmit={() => form.submit()}
       >
         <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark={false}>
           <Form.Item name="id" hidden>
@@ -163,11 +164,17 @@ const AddonTable = () => {
             />
           </Form.Item>
 
-          <Form.Item name="is_active" label="Active" valuePropName="checked">
+          <Form.Item
+            name="is_active"
+            label="Active"
+            valuePropName="checked"
+            extra="Offered to customers."
+            style={{ marginBottom: 0 }}
+          >
             <Switch />
           </Form.Item>
         </Form>
-      </Modal>
+      </FormModal>
     </div>
   );
 };

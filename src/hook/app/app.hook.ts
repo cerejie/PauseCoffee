@@ -28,8 +28,19 @@ const themeConfig: ThemeConfig = {
     colorWarning: brand.warning,
     colorError: brand.danger,
     colorTextBase: brand.textBody,
+    // Spelled out rather than left to antd's alpha ladder off colorTextBase.
+    // Placeholders and field hints landed near 25% of the body colour there,
+    // which on cream is barely a colour at all — "Any menu" and "Search an
+    // item…" read as empty controls.
+    colorText: brand.textBody,
+    colorTextHeading: brand.textHeading,
+    colorTextDescription: brand.textMuted,
+    colorTextPlaceholder: brand.textMuted,
     colorBgBase: brand.canvas,
     colorBgContainer: brand.surface,
+    // The panel a Select opens into is portalled, so it takes its ground from
+    // the theme rather than from the style contract.
+    colorBgElevated: brand.surface,
     colorBorder: brand.border,
     colorBorderSecondary: brand.borderSoft,
     fontFamily: brandFonts.body,
@@ -40,7 +51,12 @@ const themeConfig: ThemeConfig = {
   components: {
     Button: { borderRadius: 999, fontWeight: 600, primaryShadow: "none" },
     Input: { borderRadius: 12, paddingBlock: 9 },
-    Select: { borderRadius: 12 },
+    Select: {
+      borderRadius: 12,
+      optionSelectedBg: brand.primarySoft,
+      optionSelectedColor: brand.textHeading,
+      optionActiveBg: brand.surfaceAlt,
+    },
     Modal: { borderRadiusLG: 20 },
     Drawer: { paddingLG: 0 },
     Segmented: { borderRadius: 12 },

@@ -1,13 +1,9 @@
-import {
-  EditOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, Select, Switch, Tag, Tooltip, type TableProps } from "antd";
 import { useMemo } from "react";
 import CardTable from "../../common/table/CardTable";
 import ProductImage from "../../common/media/ProductImage";
+import RowActions from "../../common/table/cells/RowActions";
 import { TwoLineCell } from "../../common/table/cells/TwoLineCell";
 import { useProductListHook } from "../../../hook/data/admin/product.list.hook";
 import {
@@ -56,6 +52,8 @@ const ProductTable = () => {
     openForm,
     toggleActive,
     isToggling,
+    remove,
+    removingId,
   } = useProductListHook();
 
   const columns = useMemo<TableProps<ProductRow>["columns"]>(
@@ -125,18 +123,16 @@ const ProductTable = () => {
         key: "actions",
         align: "right",
         render: (_value, record) => (
-          <Tooltip title="Edit">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => openForm(record)}
-              aria-label={`Edit ${record.name}`}
-            />
-          </Tooltip>
+          <RowActions
+            label={record.name}
+            onEdit={() => openForm(record)}
+            onDelete={() => remove(record)}
+            deleting={removingId === record.id}
+          />
         ),
       },
     ],
-    [openForm, toggleActive, isToggling],
+    [openForm, toggleActive, isToggling, remove, removingId],
   );
 
   return (

@@ -1,7 +1,8 @@
-import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Switch, Tag, Tooltip, type TableProps } from "antd";
 import { useMemo } from "react";
 import CardTable from "../../common/table/CardTable";
+import RowActions from "../../common/table/cells/RowActions";
 import { TwoLineCell } from "../../common/table/cells/TwoLineCell";
 import { menuGroupLabels } from "../../../enums/menu.group.enum";
 import { useCategoryListHook } from "../../../hook/data/admin/category.list.hook";
@@ -18,8 +19,17 @@ type CategoryRow = ICategory & { productCount: number };
 /// The level between drinks/food and an item. Everything the options drawer
 /// offers a customer is decided here, which is why the switches are columns.
 const CategoryTable = () => {
-  const { rows, isLoading, isFetching, refetch, openForm, toggleActive, isToggling } =
-    useCategoryListHook();
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    refetch,
+    openForm,
+    toggleActive,
+    isToggling,
+    remove,
+    removingId,
+  } = useCategoryListHook();
 
   const columns = useMemo<TableProps<CategoryRow>["columns"]>(
     () => [
@@ -80,18 +90,16 @@ const CategoryTable = () => {
         key: "actions",
         align: "right",
         render: (_value, record) => (
-          <Tooltip title="Edit">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => openForm(record)}
-              aria-label={`Edit ${record.name}`}
-            />
-          </Tooltip>
+          <RowActions
+            label={record.name}
+            onEdit={() => openForm(record)}
+            onDelete={() => remove(record)}
+            deleting={removingId === record.id}
+          />
         ),
       },
     ],
-    [openForm, toggleActive, isToggling],
+    [openForm, toggleActive, isToggling, remove, removingId],
   );
 
   return (

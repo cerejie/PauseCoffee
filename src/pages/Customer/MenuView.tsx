@@ -1,12 +1,13 @@
 import { CoffeeOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input } from "antd";
-import { useEffect, useMemo } from "react";
+import { useMemo, useRef } from "react";
 import BrandLoader from "../../components/common/loader/BrandLoader";
 import EmptyState from "../../components/common/state/EmptyState";
 import CategoryRail from "../../components/menu/menus/CategoryRail";
 import GroupTabs from "../../components/menu/menus/GroupTabs";
 import ProductOptionsDrawer from "../../components/menu/modal/ProductOptionsDrawer";
 import MenuSection from "../../components/menu/views/MenuSection";
+import { useCategoryScrollHook } from "../../hook/data/menu/category.scroll.hook";
 import { useMenuListHook } from "../../hook/data/menu/menu.list.hook";
 import { useProductOptionsHook } from "../../hook/data/menu/product.options.hook";
 import {
@@ -48,37 +49,12 @@ const MenuView = () => {
 
   // The rail follows the scroll position rather than being clicked into place,
   // so browsing the menu keeps the rail honest about where you are.
-  useEffect(() => {
-    if (!slugs.length) return;
-
-    const elements = slugs
-      .map((slug) => document.getElementById(`section-${slug}`))
-      .filter((element): element is HTMLElement => Boolean(element));
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-
-        if (visible) {
-          setActiveCategorySlug(visible.target.id.replace("section-", ""));
-        }
-      },
-      // Only the band just under the sticky rail counts as "current".
-      { rootMargin: "-140px 0px -65% 0px", threshold: 0 },
-    );
-
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, [slugs, setActiveCategorySlug]);
-
-  const scrollToSection = (slug: string) => {
-    setActiveCategorySlug(slug);
-    document
-      .getElementById(`section-${slug}`)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const railRef = useRef<HTMLElement | null>(null);
+  const { pinned, scrollToSection } = useCategoryScrollHook({
+    slugs,
+    railRef,
+    setActiveSlug: setActiveCategorySlug,
+  });
 
   if (isLoading) return <BrandLoader label="Warming up the menu" />;
 
@@ -124,6 +100,8 @@ const MenuView = () => {
         sections={sections}
         activeSlug={activeCategorySlug}
         onSelect={scrollToSection}
+        railRef={railRef}
+        pinned={pinned}
       />
 
       {resultCount === 0 ? (

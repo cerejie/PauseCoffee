@@ -1,72 +1,87 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Col, Form, Input, InputNumber, Modal, Row, Select, Switch } from "antd";
-import { menuGroupOptions } from "../../../enums/menu.group.enum";
+import { Button, Col, Form, Input, InputNumber, Row, Select, Switch } from "antd";
+import { MenuGroupEnum, menuPortionNoun } from "../../../enums/menu.group.enum";
 import { useProductFormHook } from "../../../hook/data/admin/product.form.hook";
+import FormModal from "../../common/modal/FormModal";
 import ProductImageUpload from "./ProductImageUpload";
+import {
+  addRowButton,
+  labelHint,
+  section,
+  sectionHead,
+  sectionHint,
+  sectionTitle,
+  sizeRow,
+} from "../../../styles/admin/masterfile.modal.css";
 
-/// Create/update an item and its price tiers. Group narrows the category and
-/// the size list; sizes are a Form.List because a House Blend has two tiers and
-/// a pastry has one — the shape is per item, the vocabulary is the masterfile.
+/// Create/update an item and its price tiers. The category settles which menu
+/// the item is on, and that decides what the price rows are called: a drink is
+/// priced per size, food per type ("1pc", "3pcs set"). They are a Form.List
+/// either way, because a House Blend has two tiers and a cookie has one.
 const ProductFormModal = () => {
   const {
     form,
     visible,
     isEditing,
     isSaving,
+    menuGroup,
     categoryOptions,
     sizeOptions,
-    onGroupChange,
+    onCategoryChange,
     trackUpload,
     close,
     onSubmit,
   } = useProductFormHook();
 
+  const portion = menuPortionNoun[menuGroup] ?? menuPortionNoun[MenuGroupEnum.Drinks];
+
   return (
-    <Modal
+    <FormModal
       open={visible}
-      onCancel={close}
       title={isEditing ? "Edit item" : "New item"}
-      centered
-      width={640}
-      destroyOnHidden
-      okText={isEditing ? "Save changes" : "Add item"}
-      confirmLoading={isSaving}
-      onOk={() => form.submit()}
+      subtitle={
+        isEditing
+          ? "Update the item details below."
+          : "Add a drink or a dish to the customer menu."
+      }
+      width={720}
+      saving={isSaving}
+      submitText={isEditing ? "Save changes" : "Add item"}
+      submitIcon={isEditing ? undefined : <PlusOutlined />}
+      onCancel={close}
+      onSubmit={() => form.submit()}
     >
       <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark={false}>
         <Form.Item name="id" hidden>
           <Input />
         </Form.Item>
 
-        <Row gutter={12}>
-          <Col span={12}>
-            <Form.Item
-              name="menu_group"
-              label="Menu"
-              rules={[{ required: true, message: "Drinks or food?" }]}
-            >
-              <Select options={menuGroupOptions} onChange={onGroupChange} />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="category_id"
-              label="Category"
-              rules={[{ required: true, message: "Pick a category." }]}
-            >
-              <Select
-                placeholder={
-                  categoryOptions.length ? "Choose one" : "No categories in this menu yet"
-                }
-                disabled={!categoryOptions.length}
-                options={categoryOptions}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
+        {/* Carried, not asked for: the chosen category is what sets it. */}
+        <Form.Item name="menu_group" hidden>
+          <Input />
+        </Form.Item>
 
-        <Row gutter={16}>
-          <Col flex="120px">
+        <Form.Item
+          name="category_id"
+          label="Category"
+          extra="Which menu the item appears on follows from this."
+          rules={[{ required: true, message: "Pick a category." }]}
+        >
+          <Select
+            placeholder={
+              categoryOptions.length
+                ? "Choose a category"
+                : "Add a category on the Categories tab first"
+            }
+            options={categoryOptions}
+            onChange={onCategoryChange}
+            showSearch
+            optionFilterProp="label"
+          />
+        </Form.Item>
+
+        <Row gutter={24}>
+          <Col flex="200px">
             {/* Required: the customer menu leads with the picture, and an item
                 without one is the odd tile out on the grid. */}
             <Form.Item
@@ -78,7 +93,7 @@ const ProductFormModal = () => {
             </Form.Item>
           </Col>
 
-          <Col flex="auto">
+          <Col flex="auto" style={{ minWidth: 0 }}>
             <Form.Item
               name="name"
               label="Name"
@@ -89,65 +104,87 @@ const ProductFormModal = () => {
 
             <Form.Item name="description" label="Description">
               <Input.TextArea
-                rows={3}
+                rows={4}
                 maxLength={140}
+                showCount
                 placeholder="Condensed milk, full-bodied espresso"
               />
             </Form.Item>
           </Col>
         </Row>
 
-        <Row gutter={12}>
+        <Row gutter={16}>
           <Col span={10}>
-            <Form.Item name="badge" label="Badge">
+            <Form.Item
+              name="badge"
+              label={
+                <>
+                  Badge&nbsp;<span className={labelHint}>(optional)</span>
+                </>
+              }
+            >
               <Input placeholder="Bestseller" maxLength={20} />
             </Form.Item>
           </Col>
           <Col span={7}>
-            <Form.Item name="sort_order" label="Order">
+            <Form.Item
+              name="sort_order"
+              label="Display order"
+              extra="Lower numbers appear first."
+            >
               <InputNumber min={1} max={999} style={{ width: "100%" }} />
             </Form.Item>
           </Col>
           <Col span={7}>
-            <Form.Item name="is_active" label="On the menu" valuePropName="checked">
+            <Form.Item
+              name="is_active"
+              label="On the menu"
+              valuePropName="checked"
+              extra="Visible to customers."
+            >
               <Switch />
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.List
-          name="sizes"
-          rules={[
-            {
-              validator: async (_rule, sizes) => {
-                if (!sizes?.length) throw new Error("An item needs at least one size.");
+        <div className={section}>
+          <div className={sectionHead}>
+            <h3 className={sectionTitle}>{portion.many} &amp; prices</h3>
+            <span className={sectionHint}>
+              Set the available {portion.one}s and their prices.
+            </span>
+          </div>
+
+          <Form.List
+            name="sizes"
+            rules={[
+              {
+                validator: async (_rule, sizes) => {
+                  if (!sizes?.length)
+                    throw new Error(`An item needs at least one ${portion.one}.`);
+                },
               },
-            },
-          ]}
-        >
-          {(fields, { add, remove }, { errors }) => (
-            <>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>
-                Sizes and prices
-              </div>
-              {fields.map((field) => (
-                <Row gutter={8} key={field.key} align="middle" style={{ marginBottom: 8 }}>
-                  <Col span={11}>
+            ]}
+          >
+            {(fields, { add, remove }, { errors }) => (
+              <>
+                {fields.map((field) => (
+                  <div className={sizeRow} key={field.key}>
                     <Form.Item
                       name={[field.name, "size_id"]}
                       style={{ marginBottom: 0 }}
-                      rules={[{ required: true, message: "Size?" }]}
+                      rules={[{ required: true, message: "Which one?" }]}
                     >
                       <Select
                         placeholder={
-                          sizeOptions.length ? "Pick a size" : "Add a size first"
+                          sizeOptions.length
+                            ? `Pick a ${portion.one}`
+                            : `Add a ${portion.one} on the Sizes tab first`
                         }
-                        disabled={!sizeOptions.length}
                         options={sizeOptions}
                       />
                     </Form.Item>
-                  </Col>
-                  <Col span={10}>
+
                     <Form.Item
                       name={[field.name, "price"]}
                       style={{ marginBottom: 0 }}
@@ -161,33 +198,34 @@ const ProductFormModal = () => {
                         placeholder="150"
                       />
                     </Form.Item>
-                  </Col>
-                  <Col span={3}>
+
                     <Button
                       icon={<DeleteOutlined />}
                       danger
-                      type="text"
                       disabled={fields.length === 1}
                       onClick={() => remove(field.name)}
-                      aria-label="Remove size"
+                      aria-label={`Remove ${portion.one}`}
                     />
-                  </Col>
-                </Row>
-              ))}
+                  </div>
+                ))}
 
-              <Button
-                icon={<PlusOutlined />}
-                onClick={() => add({ size_id: "", label: "", price: 0, sort_order: fields.length + 1 })}
-                block
-              >
-                Add a size
-              </Button>
-              <Form.ErrorList errors={errors} />
-            </>
-          )}
-        </Form.List>
+                <Button
+                  className={addRowButton}
+                  icon={<PlusOutlined />}
+                  onClick={() =>
+                    add({ size_id: "", label: "", price: 0, sort_order: fields.length + 1 })
+                  }
+                  block
+                >
+                  Add a {portion.one}
+                </Button>
+                <Form.ErrorList errors={errors} />
+              </>
+            )}
+          </Form.List>
+        </div>
       </Form>
-    </Modal>
+    </FormModal>
   );
 };
 

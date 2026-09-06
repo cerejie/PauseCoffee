@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Form } from "antd";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { categoryAccents } from "../../../constants/brand.constants";
 import { MenuGroupEnum } from "../../../enums/menu.group.enum";
 import { adminCategoryFormModalKey } from "../../../keys/modal.keys";
 import { adminCategoriesQueryKey, menuQueryKey } from "../../../keys/query.keys";
@@ -16,15 +17,26 @@ import { useModal } from "../../common/modal.hook";
 /// derived from the name, the order puts a new category at the end of the list.
 type CategoryFormValues = Omit<ICategoryRequest, "slug" | "sort_order">;
 
-const blankCategory: CategoryFormValues = {
+/// The first accent no category is wearing yet, so the menu stays colour-coded
+/// without the admin having to think about it. Past the end of the palette it
+/// wraps — six categories in, a repeat is better than a blank field.
+const nextAccent = (categories: readonly ICategory[]): string => {
+  const taken = new Set(categories.map((category) => category.accent_color.toLowerCase()));
+  return (
+    categoryAccents.find((color) => !taken.has(color.toLowerCase())) ??
+    categoryAccents[categories.length % categoryAccents.length]
+  );
+};
+
+const blankCategory = (categories: readonly ICategory[]): CategoryFormValues => ({
   menu_group: MenuGroupEnum.Drinks,
   name: "",
   tagline: "",
-  accent_color: "#E9A13B",
+  accent_color: nextAccent(categories),
   has_temperature: true,
   has_sweetness: false,
   is_active: true,
-};
+});
 
 /// Create and update in one hook — `modal.data` presence is what decides which.
 export const useCategoryFormHook = () => {
@@ -42,6 +54,13 @@ export const useCategoryFormHook = () => {
     queryFn: () => adminServices.getCategories(),
   });
 
+  // Read at open time, not depended on: a background refetch landing mid-edit
+  // must not reset the form under the admin.
+  const categoriesRef = useRef<readonly ICategory[]>([]);
+  useEffect(() => {
+    categoriesRef.current = categoriesQuery.data ?? [];
+  }, [categoriesQuery.data]);
+
   useEffect(() => {
     if (!modal.visible) return;
 
@@ -57,7 +76,7 @@ export const useCategoryFormHook = () => {
             has_sweetness: editing.has_sweetness,
             is_active: editing.is_active,
           }
-        : blankCategory,
+        : blankCategory(categoriesRef.current),
     );
   }, [modal.visible, editing, form]);
 

@@ -185,3 +185,11 @@ export const statusDot = style({
   borderRadius: "50%",
   backgroundColor: "currentColor",
 });
+
+/// The edit/delete pair every masterfile row ends with.
+export const rowActions = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 2,
+  justifyContent: "flex-end",
+});

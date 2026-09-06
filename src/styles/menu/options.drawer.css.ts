@@ -1,6 +1,8 @@
 import { style } from "@vanilla-extract/css";
 import {
   accent,
+  accentInk,
+  accentOn,
   accentSoft,
   colorBorder,
   colorBorderSoft,
@@ -40,7 +42,7 @@ export const headBadge = style({
   fontWeight: 700,
   letterSpacing: "0.12em",
   textTransform: "uppercase",
-  color: accent,
+  color: accentInk,
   marginBottom: 8,
 });
 
@@ -203,7 +205,7 @@ export const addonCheck = style({
 export const addonCheckActive = style({
   borderColor: accent,
   backgroundColor: accent,
-  color: colorSurface,
+  color: accentOn,
 });
 
 export const addonName = style({

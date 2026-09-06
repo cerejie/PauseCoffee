@@ -59,6 +59,56 @@ export const useCategoryListHook = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (category: ICategory) => adminServices.deleteCategory(category.id),
+
+    onSuccess: (_result, category) => {
+      void queryClient.invalidateQueries({ queryKey: [adminCategoriesQueryKey] });
+      void queryClient.invalidateQueries({ queryKey: [menuQueryKey] });
+
+      notification.success({
+        message: `${category.name} deleted`,
+        placement: "bottomRight",
+      });
+    },
+
+    onError: (error) => {
+      notification.error({
+        message: "Couldn't delete that category",
+        description: supabaseError(error),
+      });
+    },
+  });
+
+  /// A category with items on it is refused by the database (0010). Catching it
+  /// here first turns a foreign-key error into a sentence that says which items
+  /// are in the way.
+  const remove = useCallback(
+    (category: ICategory & { productCount: number }) => {
+      if (category.productCount) {
+        confirm.warning({
+          title: `${category.name} still has items`,
+          content: `Move or delete its ${category.productCount} item(s) first. Deleting a category never takes its drinks with it.`,
+          okText: "Got it",
+          centered: true,
+        });
+        return;
+      }
+
+      confirm.confirm({
+        title: `Delete ${category.name}?`,
+        content:
+          "The category and the add-ons offered under it go for good. To take it off the customer menu for a while, use the On menu switch instead.",
+        okText: "Delete it",
+        cancelText: "Cancel",
+        okButtonProps: { danger: true },
+        centered: true,
+        onOk: () => deleteMutation.mutateAsync(category),
+      });
+    },
+    [confirm, deleteMutation],
+  );
+
   const toggleActive = useCallback(
     (category: ICategory & { productCount: number }) => {
       if (category.is_active) {
@@ -87,5 +137,9 @@ export const useCategoryListHook = () => {
     openForm: (category?: ICategory) => openModal(category),
     toggleActive,
     isToggling: activeMutation.isPending,
+    remove,
+    /// The row being deleted, not a flag — a shared boolean would spin every
+    /// bin in the table at once.
+    removingId: deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null,
   };
 };

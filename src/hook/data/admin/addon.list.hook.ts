@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Form } from "antd";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { adminAddonFormModalKey } from "../../../keys/modal.keys";
 import {
   adminAddonsQueryKey,
@@ -30,7 +30,7 @@ const blankAddon: AddonFormValues = {
 export const useAddonListHook = () => {
   const [form] = Form.useForm<AddonFormValues>();
   const queryClient = useQueryClient();
-  const { notification } = App.useApp();
+  const { notification, modal: confirm } = App.useApp();
   const { modal, openModal, closeModal } = useModal<IAddon>(adminAddonFormModalKey);
 
   const editing = modal.data;
@@ -120,8 +120,53 @@ export const useAddonListHook = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (addon: IAddon) => adminServices.deleteAddon(addon.id),
+
+    onSuccess: (_result, addon) => {
+      void queryClient.invalidateQueries({ queryKey: [adminAddonsQueryKey] });
+      void queryClient.invalidateQueries({ queryKey: [adminCategoryAddonsQueryKey] });
+      void queryClient.invalidateQueries({ queryKey: [menuQueryKey] });
+
+      notification.success({
+        message: `${addon.name} deleted`,
+        placement: "bottomRight",
+      });
+    },
+
+    onError: (error) => {
+      notification.error({
+        message: "Couldn't delete that add-on",
+        description: supabaseError(error),
+      });
+    },
+  });
+
+  /// No guard needed: the category links cascade, and an add-on already on a
+  /// receipt was copied into order_items.addons as json when the order was
+  /// placed, so deleting it cannot reach backwards into history.
+  const remove = useCallback(
+    (addon: IAddon) => {
+      confirm.confirm({
+        title: `Delete ${addon.name}?`,
+        content:
+          "It stops being offered on every category at once. Orders already placed keep their own copy. To pause it instead, untick Active.",
+        okText: "Delete it",
+        cancelText: "Cancel",
+        okButtonProps: { danger: true },
+        centered: true,
+        onOk: () => deleteMutation.mutateAsync(addon),
+      });
+    },
+    [confirm, deleteMutation],
+  );
+
   return {
     rows,
+    remove,
+    /// The row being deleted, not a flag — a shared boolean would spin every
+    /// bin in the table at once.
+    removingId: deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null,
     categoryOptions: categories.map((category) => ({
       value: category.id,
       label: category.name,

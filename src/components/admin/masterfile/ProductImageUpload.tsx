@@ -1,15 +1,25 @@
-import { LoadingOutlined, PictureOutlined } from "@ant-design/icons";
-import { Upload } from "antd";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  LoadingOutlined,
+  PictureOutlined,
+} from "@ant-design/icons";
+import { Button, Upload } from "antd";
 import ProductImage from "../../common/media/ProductImage";
 import { useProductImageHook } from "../../../hook/data/admin/product.image.hook";
-import { menuImageAccept } from "../../../constants/image.constants";
 import {
-  uploadHint,
-  uploadOverlay,
-  uploadPlaceholder,
-  uploadPreview,
-  uploadTile,
-} from "../../../styles/common/media.css";
+  menuImageAccept,
+  menuImageMaxBytes,
+} from "../../../constants/image.constants";
+import {
+  photoActions,
+  photoBadge,
+  photoHint,
+  photoPlaceholder,
+  photoPreview,
+  photoTile,
+  photoTileEmpty,
+} from "../../../styles/admin/masterfile.modal.css";
 
 interface ProductImageUploadProps {
   /// Injected by Form.Item — the object path stored on the product row.
@@ -19,6 +29,8 @@ interface ProductImageUploadProps {
   /// then abandoned can be swept up when the modal closes.
   onUploaded?: (path: string) => void;
 }
+
+const maxMegabytes = Math.round(menuImageMaxBytes / (1024 * 1024));
 
 /// The photo field on the item form. `beforeUpload` does the work and then
 /// tells antd to forget the file: the upload is a Supabase Storage call, and
@@ -34,6 +46,9 @@ const ProductImageUpload = ({ value, onChange, onUploaded }: ProductImageUploadP
     onChange?.(path);
   };
 
+  /// The tile is the trigger: it carries its own instruction while empty and a
+  /// pencil badge once filled, so the button that used to sit beneath it only
+  /// opened the same picker a second time.
   return (
     <div>
       <Upload
@@ -45,29 +60,42 @@ const ProductImageUpload = ({ value, onChange, onUploaded }: ProductImageUploadP
           return Upload.LIST_IGNORE;
         }}
       >
-        <div className={uploadTile}>
+        <div className={previewUrl ? photoTile : `${photoTile} ${photoTileEmpty}`}>
           {isUploading ? (
-            <span className={uploadPlaceholder}>
-              <LoadingOutlined style={{ fontSize: 20 }} />
+            <span className={photoPlaceholder}>
+              <LoadingOutlined style={{ fontSize: 22 }} />
               Uploading…
             </span>
           ) : previewUrl ? (
             <>
-              <ProductImage src={previewUrl} alt="Item photo" className={uploadPreview} />
-              <span className={uploadOverlay}>Replace</span>
+              <ProductImage src={previewUrl} alt="Item photo" className={photoPreview} />
+              <span className={photoBadge} aria-hidden="true">
+                <EditOutlined />
+              </span>
             </>
           ) : (
-            <span className={uploadPlaceholder}>
-              <PictureOutlined style={{ fontSize: 20 }} />
+            <span className={photoPlaceholder}>
+              <PictureOutlined style={{ fontSize: 22 }} />
               Add a photo
             </span>
           )}
         </div>
       </Upload>
 
-      <p className={uploadHint}>
-        Shown on the customer menu. Square shots work best — it is resized and
-        compressed before upload.
+      {/* Clears the field rather than the bucket. The photo is required, so
+          the save stays blocked until another one takes its place — and the
+          file itself is swept up when the modal closes. */}
+      {previewUrl ? (
+        <div className={photoActions}>
+          <Button danger icon={<DeleteOutlined />} onClick={() => onChange?.(null)}>
+            Remove
+          </Button>
+        </div>
+      ) : null}
+
+      <p className={photoHint}>
+        Recommended: 1:1 square image
+        JPG, PNG or WebP · Max {maxMegabytes} MB
       </p>
     </div>
   );

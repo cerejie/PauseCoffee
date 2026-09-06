@@ -3,7 +3,11 @@ import {
   colorBorder,
   colorBorderSoft,
   colorCanvas,
+  colorCanvasVeil,
   colorEspresso,
+  colorOnEspresso,
+  colorOnEspressoFaint,
+  colorOnEspressoLine,
   colorPrimary,
   colorSurface,
   colorTextBody,
@@ -36,7 +40,7 @@ export const header = style({
   gap: 16,
   padding: "14px 20px",
   paddingTop: "max(14px, env(safe-area-inset-top))",
-  backgroundColor: "rgba(251, 246, 236, 0.82)",
+  backgroundColor: colorCanvasVeil,
   backdropFilter: "saturate(180%) blur(14px)",
   WebkitBackdropFilter: "saturate(180%) blur(14px)",
   borderBottom: `1px solid ${colorBorderSoft}`,
@@ -99,11 +103,11 @@ export const brandSub = style({
 });
 
 export const brandWordLight = style({
-  color: "#F7EFE3",
+  color: colorOnEspresso,
 });
 
 export const brandSubLight = style({
-  color: "rgba(247, 239, 227, 0.5)",
+  color: colorOnEspressoFaint,
 });
 
 export const headerActions = style({
@@ -162,9 +166,9 @@ export const cartBar = style({
   borderRadius: radiusPill,
   backgroundColor: colorEspresso,
   boxShadow: shadowLifted,
-  border: "1px solid rgba(255,255,255,0.08)",
+  border: `1px solid ${colorOnEspressoLine}`,
   cursor: "pointer",
-  color: "#F6EEE1",
+  color: colorOnEspresso,
   transition: "transform .18s ease",
   selectors: {
     "&:hover": { transform: "translateX(-50%) translateY(-2px)" },

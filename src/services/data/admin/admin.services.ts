@@ -116,6 +116,14 @@ export const adminServices = {
     return data as ICategory;
   },
 
+  /// Hard delete. 0010 makes products.category_id RESTRICT, so a category with
+  /// items on it is refused by the database rather than quietly taking them
+  /// with it — the caller checks the count first and says so in plainer words.
+  deleteCategory: async (categoryId: string) => {
+    const { error } = await supabase.from("categories").delete().eq("id", categoryId);
+    if (error) throw error;
+  },
+
   setCategoryActive: async (categoryId: string, isActive: boolean) => {
     const { error } = await supabase
       .from("categories")
@@ -135,6 +143,13 @@ export const adminServices = {
 
     if (error) throw error;
     return (data ?? []) as ISize[];
+  },
+
+  /// Hard delete. RESTRICT (0010) stops a size that products are priced
+  /// against from being removed out from under them.
+  deleteSize: async (sizeId: string) => {
+    const { error } = await supabase.from("sizes").delete().eq("id", sizeId);
+    if (error) throw error;
   },
 
   saveSize: async (request: ISizeRequest): Promise<ISize> => {
@@ -229,6 +244,25 @@ export const adminServices = {
     return saved;
   },
 
+  /// Hard delete. Sizes cascade with it; order_items keeps its own copy of the
+  /// name, size and price and only loses the link (0001), so a receipt already
+  /// handed over still reads correctly.
+  ///
+  /// The photo goes only once the row is gone: removed first, a failed delete
+  /// would leave a live product pointing at a file that no longer exists.
+  deleteProduct: async (product: Pick<IProduct, "id" | "image_path">) => {
+    const { error } = await supabase.from("products").delete().eq("id", product.id);
+    if (error) throw error;
+
+    if (!product.image_path) return;
+    // Best effort: the item is already gone, and reporting a failure here would
+    // tell the user the delete did not happen when it did.
+    await supabase.storage
+      .from(menuImageBucket)
+      .remove([product.image_path])
+      .catch(() => undefined);
+  },
+
   setProductActive: async (productId: string, isActive: boolean) => {
     const { error } = await supabase
       .from("products")
@@ -248,6 +282,13 @@ export const adminServices = {
 
     if (error) throw error;
     return (data ?? []) as IAddon[];
+  },
+
+  /// Hard delete. The category links cascade; an add-on already on a receipt
+  /// was denormalised into order_items.addons as json, so history is unaffected.
+  deleteAddon: async (addonId: string) => {
+    const { error } = await supabase.from("addons").delete().eq("id", addonId);
+    if (error) throw error;
   },
 
   saveAddon: async (request: IAddonRequest): Promise<IAddon> => {

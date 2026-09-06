@@ -1,6 +1,7 @@
 import { style } from "@vanilla-extract/css";
 import {
   accent,
+  accentInk,
   accentSoft,
   colorBorderSoft,
   colorSurfaceAlt,
@@ -35,7 +36,7 @@ export const mediaFallback = style({
   display: "grid",
   placeItems: "center",
   backgroundColor: accentSoft,
-  color: accent,
+  color: accentInk,
 });
 
 // ---------------------------------------------------------------- callers

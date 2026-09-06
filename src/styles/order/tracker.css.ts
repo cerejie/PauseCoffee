@@ -1,6 +1,7 @@
 import { style, keyframes } from "@vanilla-extract/css";
 import {
   accent,
+  accentOn,
   accentSoft,
   colorBorder,
   colorBorderSoft,
@@ -156,7 +157,7 @@ export const stepDot = style({
 export const stepDotDone = style({
   borderColor: accent,
   backgroundColor: accent,
-  color: colorSurface,
+  color: accentOn,
 });
 
 /// The live step pulses so a glance tells you which stage the drink is at.

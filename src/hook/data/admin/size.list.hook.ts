@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Form } from "antd";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { adminSizeFormModalKey } from "../../../keys/modal.keys";
 import {
   adminProductsQueryKey,
@@ -28,7 +28,7 @@ const blankSize: SizeFormValues = {
 export const useSizeListHook = () => {
   const [form] = Form.useForm<SizeFormValues>();
   const queryClient = useQueryClient();
-  const { notification } = App.useApp();
+  const { notification, modal: confirm } = App.useApp();
   const { modal, openModal, closeModal } = useModal<ISize>(adminSizeFormModalKey);
 
   const editing = modal.data;
@@ -104,8 +104,61 @@ export const useSizeListHook = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (size: ISize) => adminServices.deleteSize(size.id),
+
+    onSuccess: (_result, size) => {
+      void queryClient.invalidateQueries({ queryKey: [adminSizesQueryKey] });
+      void queryClient.invalidateQueries({ queryKey: [menuQueryKey] });
+
+      notification.success({
+        message: `${size.name} deleted`,
+        placement: "bottomRight",
+      });
+    },
+
+    onError: (error) => {
+      notification.error({
+        message: "Couldn't delete that size",
+        description: supabaseError(error),
+      });
+    },
+  });
+
+  /// A size products are priced against is refused by the database (0010) —
+  /// asked here first so the answer names the items rather than a constraint.
+  const remove = useCallback(
+    (size: ISize & { usedBy: number }) => {
+      if (size.usedBy) {
+        confirm.warning({
+          title: `${size.name} is still priced on ${size.usedBy} item(s)`,
+          content:
+            "Reprice or remove those items first. Untick Offered to stop new items being priced in this size without touching the ones that already are.",
+          okText: "Got it",
+          centered: true,
+        });
+        return;
+      }
+
+      confirm.confirm({
+        title: `Delete ${size.name}?`,
+        content: "Nothing is priced in this size, so it goes for good.",
+        okText: "Delete it",
+        cancelText: "Cancel",
+        okButtonProps: { danger: true },
+        centered: true,
+        onOk: () => deleteMutation.mutateAsync(size),
+      });
+    },
+    [confirm, deleteMutation],
+  );
+
   return {
     rows,
+    remove,
+    /// The row being deleted, not a flag — a shared boolean would spin every
+    /// bin in the table at once.
+    removingId: deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     refetch: query.refetch,
