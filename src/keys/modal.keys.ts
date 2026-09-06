@@ -7,3 +7,4 @@ export const adminCategoryFormModalKey = "admin-category-form-modal";
 export const adminAddonFormModalKey = "admin-addon-form-modal";
 export const adminConfirmModalKey = "admin-confirm-modal";
 export const adminSizeFormModalKey = "admin-size-form-modal";
+export const confirmEmailModalKey = "confirm-email-modal";

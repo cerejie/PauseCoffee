@@ -15,8 +15,8 @@ const RegisterForm = ({ onRegistered }: RegisterFormProps) => {
   return (
     <>
       <p className={cardSub}>
-        Register with your email and we'll send it for approval. You'll be able to
-        sign in once it's approved.
+        Register with your email, confirm the address, and we'll send it for
+        approval. You'll be able to sign in once it's approved.
       </p>
 
       <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark={false}>

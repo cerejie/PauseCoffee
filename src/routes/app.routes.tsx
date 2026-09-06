@@ -1,7 +1,9 @@
 import { Navigate, type RouteObject } from "react-router-dom";
 import AdminGuard from "../components/common/guard/AdminGuard";
+import { emailConfirmPath } from "../constants/auth.constants";
 import AdminLayout from "../layouts/AdminLayout";
 import CustomerLayout from "../layouts/CustomerLayout";
+import AdminConfirmEmailView from "../pages/Admin/AdminConfirmEmailView";
 import AdminLoginView from "../pages/Admin/AdminLoginView";
 import CartView from "../pages/Customer/CartView";
 import MenuView from "../pages/Customer/MenuView";
@@ -24,6 +26,12 @@ export const appRoutes: RouteObject[] = [
     // visitor is sent, so it cannot itself require a session.
     path: "/admin/login",
     Component: AdminLoginView,
+  },
+  {
+    // Outside the guard too: whoever follows the link out of their inbox has no
+    // session, and the account it confirms is not approved yet either.
+    path: emailConfirmPath,
+    Component: AdminConfirmEmailView,
   },
   {
     path: "/admin",

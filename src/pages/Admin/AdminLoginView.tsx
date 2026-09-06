@@ -1,6 +1,7 @@
 import { Tabs } from "antd";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import ConfirmEmailModal from "../../components/account/modal/ConfirmEmailModal";
 import RegisterForm from "../../components/account/form/RegisterForm";
 import SignInForm from "../../components/account/form/SignInForm";
 import BrandMark from "../../components/common/brand/BrandMark";
@@ -66,6 +67,9 @@ const AdminLoginView = () => {
           </Link>
         </div>
       </section>
+
+      {/* Opened by the sign-up mutation, from either tab's side of the store. */}
+      <ConfirmEmailModal />
     </div>
   );
 };

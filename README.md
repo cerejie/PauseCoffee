@@ -57,6 +57,31 @@ Then in the dashboard:
 
    `admin` also unlocks the Menu screen; `staff` gets the queue and history only.
 
+### Sign-up email confirmation
+
+Anyone can request an account from **Create account** on `/admin/login`. The
+request is only recorded once the address is confirmed, and it grants nothing
+until a superadmin approves it on the Users screen. Two dashboard settings turn
+the confirmation half on:
+
+1. **Authentication → Sign In / Providers → Email** — switch **Confirm email**
+   on. With it off, sign-up returns a live session and sends nothing; the app
+   still works (the modal says the request is in rather than pointing at an
+   inbox), but nobody's address is ever verified.
+2. **Authentication → Emails → Confirm signup** — paste
+   `supabase/templates/confirm_signup.html`. It links to `/admin/confirm` with
+   `{{ .TokenHash }}` so the app redeems the token itself and can show a real
+   result; the stock template is handled too, just with less to say when a link
+   has expired.
+3. **Authentication → URL Configuration** — set **Site URL** to the deployed
+   origin (the template builds its link from it) and add `<origin>/admin/confirm`
+   to the redirect allow-list. While developing, that is
+   `http://localhost:5173`.
+
+The flow: request access → a modal names the address and waits → the email →
+`/admin/confirm` redeems the token, drops the session it opens (the profile is
+still pending) and hands the visitor back to `/admin/login`.
+
 ## Commands
 
 ```bash

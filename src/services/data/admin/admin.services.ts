@@ -12,6 +12,7 @@ import type {
   ISize,
 } from "../../../models/data/menu/menu.response";
 import type { IStaffProfile } from "../../../store/common/session.store";
+import { emailConfirmUrl } from "../../../constants/auth.constants";
 import { supabase } from "../../../utils/supabase.utils";
 
 export const adminServices = {
@@ -23,15 +24,51 @@ export const adminServices = {
 
   /// Creates the auth user only. The matching profile row — pending, with no
   /// access to anything — is written by the on_auth_user_created trigger.
+  ///
+  /// `emailRedirectTo` is what the stock Supabase template follows. Our own
+  /// template ignores it and links to the same page with a token instead, so
+  /// either template lands the visitor on the confirmation screen.
   signUp: async (fullName: string, email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName }, emailRedirectTo: emailConfirmUrl() },
     });
 
     if (error) throw error;
     return data;
+  },
+
+  /// Another copy of the sign-up email, for the address that never got the
+  /// first one. Only ever sends to an address that is already registered and
+  /// still unconfirmed — Supabase decides that, not us.
+  resendSignUpEmail: async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: emailConfirmUrl() },
+    });
+
+    if (error) throw error;
+  },
+
+  /// Redeems the single-use token from the email link. Success confirms the
+  /// address and opens a session; the profile behind it is still pending, so
+  /// the caller signs straight back out.
+  verifySignUpEmail: async (tokenHash: string) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: "signup",
+    });
+
+    if (error) throw error;
+    return data;
+  },
+
+  getSession: async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return data.session;
   },
 
   signOut: async () => {

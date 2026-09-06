@@ -1,0 +1,153 @@
+<!--
+  Pause Coffee — "Confirm signup" email.
+
+  Paste into Supabase → Authentication → Emails → Confirm signup, and switch
+  "Confirm email" on under Authentication → Sign In / Providers → Email.
+
+  The link deliberately does NOT use {{ .ConfirmationURL }}. That URL confirms
+  at Supabase's own endpoint and bounces back with tokens in the fragment,
+  which the app cannot show a loading or an error state for. Handing the app
+  {{ .TokenHash }} instead lets /admin/confirm redeem it itself and say what
+  happened. {{ .SiteURL }} is the Site URL configured in the dashboard, so set
+  that to the deployed origin (and to http://localhost:5173 while developing).
+
+  Colours are the values in src/constants/brand.constants.ts. Email clients
+  cannot read the app's style contract, so they are written out here; if the
+  brand changes, change them in both places.
+-->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+  Confirm your email address to finish requesting access to the Pause Coffee counter app.
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="margin:0;padding:0;background-color:#FBF6EC;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+             style="width:100%;max-width:600px;border-collapse:collapse;">
+
+        <!-- Brand band -->
+        <tr>
+          <td align="center"
+              style="background-color:#3B2317;border-radius:22px 22px 0 0;padding:34px 32px 30px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:12px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                         width="40" height="40"
+                         style="width:40px;height:40px;background-color:#E9A13B;border-radius:20px;">
+                    <tr>
+                      <td align="center" valign="middle"
+                          style="font-family:Georgia,'Times New Roman',serif;font-size:19px;
+                                 font-weight:bold;color:#3B2317;line-height:40px;">
+                        ||
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+                <td>
+                  <div style="font-family:Georgia,'Times New Roman',serif;font-size:21px;
+                              font-weight:bold;color:#FBF6EC;letter-spacing:-0.01em;line-height:1.1;">
+                    Pause
+                  </div>
+                  <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;
+                              letter-spacing:0.22em;text-transform:uppercase;color:#E9A13B;
+                              padding-top:3px;">
+                    Coffee
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background-color:#FFFDF8;border-left:1px solid #F0E6D6;
+                     border-right:1px solid #F0E6D6;padding:40px 44px 12px;">
+
+            <h1 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;
+                       font-size:27px;font-weight:normal;line-height:1.25;color:#33200F;
+                       letter-spacing:-0.02em;">
+              Confirm your email address
+            </h1>
+
+            <p style="margin:0 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:15px;
+                      line-height:1.65;color:#5A4636;">
+              An account on the Pause Coffee counter app was requested with this address.
+              Confirm it below and the request goes to the shop for approval.
+            </p>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="margin:0 0 26px;">
+              <tr>
+                <td style="background-color:#F4EADB;border:1px solid #E7DAC5;border-radius:12px;
+                           padding:12px 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;
+                           font-weight:bold;color:#33200F;word-break:break-all;">
+                  {{ .Email }}
+                </td>
+              </tr>
+            </table>
+
+            <!-- Call to action -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"
+                   style="margin:0 auto 26px;">
+              <tr>
+                <td align="center" bgcolor="#E9A13B" style="border-radius:999px;">
+                  <a href="{{ .SiteURL }}/admin/confirm?token_hash={{ .TokenHash }}&type=signup"
+                     style="display:inline-block;padding:15px 40px;font-family:Arial,Helvetica,sans-serif;
+                            font-size:15px;font-weight:bold;color:#3B2317;text-decoration:none;
+                            border-radius:999px;">
+                    Confirm my email
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;
+                      line-height:1.6;color:#96836E;">
+              If the button doesn't work, paste this into your browser:
+            </p>
+            <p style="margin:0 0 26px;font-family:Arial,Helvetica,sans-serif;font-size:12px;
+                      line-height:1.6;color:#3B7EA1;word-break:break-all;">
+              {{ .SiteURL }}/admin/confirm?token_hash={{ .TokenHash }}&type=signup
+            </p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="border-top:1px solid #F0E6D6;padding-top:22px;">
+                  <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;
+                            line-height:1.65;color:#5A4636;">
+                    <strong style="color:#33200F;">What happens next.</strong>
+                    Confirming proves the address is yours — it does not grant access on its own.
+                    A superadmin approves the account, and you can sign in from that moment.
+                  </p>
+                  <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;
+                            line-height:1.65;color:#96836E;">
+                    This link is good for 24 hours. If you didn't request an account, ignore this
+                    message — nothing was created that anyone can use.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center"
+              style="background-color:#FFFDF8;border:1px solid #F0E6D6;border-top:none;
+                     border-radius:0 0 22px 22px;padding:22px 44px 30px;">
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;
+                      line-height:1.6;color:#96836E;">
+              Pause Coffee · counter app<br />
+              This is an automated message; replies to it aren't read.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>

@@ -1,7 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 import { App, Form } from "antd";
+import { confirmEmailModalKey } from "../../keys/modal.keys";
 import { adminServices } from "../../services/data/admin/admin.services";
 import type { IRegisterRequest } from "../../models/data/user/user.request";
+import type { IEmailConfirmPrompt } from "../../models/data/user/user.response";
+import { useModal } from "../common/modal.hook";
 import { supabaseError } from "../../utils/supabase.utils";
 
 interface RegisterFormOptions {
@@ -16,29 +19,29 @@ interface RegisterFormOptions {
 export const useRegisterFormHook = ({ onRegistered }: RegisterFormOptions) => {
   const [form] = Form.useForm<IRegisterRequest>();
   const { notification } = App.useApp();
+  const { openModal } = useModal<IEmailConfirmPrompt>(confirmEmailModalKey);
 
   const mutation = useMutation({
-    mutationFn: async (values: IRegisterRequest) => {
+    mutationFn: async (values: IRegisterRequest): Promise<IEmailConfirmPrompt> => {
+      const email = values.email.trim();
       const result = await adminServices.signUp(
         values.full_name.trim(),
-        values.email.trim(),
+        email,
         values.password,
       );
 
-      // With email confirmation switched off, signUp hands back a live session.
-      // The account is pending either way, so drop it rather than leave a
-      // signed-in user the guard would only bounce.
+      // A session here means the project has email confirmation switched off:
+      // nothing was sent, and the account is already waiting on approval. Drop
+      // the session either way — it is a signed-in user the guard would bounce.
+      const emailSent = !result.session;
       if (result.session) await adminServices.signOut();
+
+      return { email, email_sent: emailSent };
     },
 
-    onSuccess: () => {
+    onSuccess: (prompt) => {
       form.resetFields();
-      notification.success({
-        message: "Request sent",
-        description:
-          "Your account needs to be approved before you can sign in. You'll be let in once it is.",
-        duration: 6,
-      });
+      openModal(prompt);
       onRegistered();
     },
 
