@@ -21,17 +21,31 @@ export const adminServices = {
     return data;
   },
 
+  /// Creates the auth user only. The matching profile row — pending, with no
+  /// access to anything — is written by the on_auth_user_created trigger.
+  signUp: async (fullName: string, email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName } },
+    });
+
+    if (error) throw error;
+    return data;
+  },
+
   signOut: async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   },
 
-  /// A staff row is what authorises the admin app — an auth user without one
-  /// is signed in but has no access, so the guard checks this, not the session.
+  /// An approved profile row is what authorises the admin app — an auth user
+  /// without one, or with one still pending, is signed in but has no access, so
+  /// the guard checks this, not the session.
   getProfile: async (userId: string): Promise<IStaffProfile | null> => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, role")
+      .select("id, full_name, email, role, status")
       .eq("id", userId)
       .maybeSingle();
 

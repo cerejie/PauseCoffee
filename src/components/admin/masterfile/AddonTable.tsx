@@ -163,10 +163,6 @@ const AddonTable = () => {
             />
           </Form.Item>
 
-          <Form.Item name="sort_order" label="Order">
-            <InputNumber min={1} max={999} style={{ width: "100%" }} />
-          </Form.Item>
-
           <Form.Item name="is_active" label="Active" valuePropName="checked">
             <Switch />
           </Form.Item>

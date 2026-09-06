@@ -1,11 +1,16 @@
 import type { Session } from "@supabase/supabase-js";
+import type { AccessStatusEnum } from "../../enums/access.status.enum";
 import type { UserRoleEnum } from "../../enums/role.enum";
 import { create } from "zustand";
 
 export interface IStaffProfile {
   id: string;
   full_name: string;
+  email: string | null;
   role: UserRoleEnum;
+  /// A profile row alone is no longer access — only `approved` is. A pending
+  /// sign-up has a row here and gets nothing.
+  status: AccessStatusEnum;
 }
 
 type States = {

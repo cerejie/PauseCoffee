@@ -32,11 +32,15 @@ export const brandFonts = {
   body: `"Inter", -apple-system, "Segoe UI", Roboto, sans-serif`,
 } as const;
 
-/// Status colours for the order lifecycle, reused by the tracker and the queue.
+/// Status colours for the order lifecycle, reused by the tracker and the queue,
+/// and for account access on the Users screen — `pending` reads the same way in
+/// both, so it is deliberately one entry.
 export const statusPalette: Record<string, { fg: string; bg: string }> = {
   pending: { fg: "#B07515", bg: "#FBEBD2" },
   preparing: { fg: "#3B7EA1", bg: "#E1EFF6" },
   ready: { fg: "#2F7C4B", bg: "#DFF1E4" },
   completed: { fg: "#6B4A38", bg: "#F0E6D6" },
   cancelled: { fg: "#C0442F", bg: "#F8E0DC" },
+  approved: { fg: "#2F7C4B", bg: "#DFF1E4" },
+  revoked: { fg: "#C0442F", bg: "#F8E0DC" },
 };

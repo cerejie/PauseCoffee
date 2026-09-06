@@ -3,7 +3,6 @@ import {
   Button,
   Form,
   Input,
-  InputNumber,
   Modal,
   Select,
   Switch,
@@ -142,10 +141,6 @@ const SizeTable = () => {
             extra="Leave empty to offer it on both drinks and food."
           >
             <Select allowClear placeholder="Both" options={menuGroupOptions} />
-          </Form.Item>
-
-          <Form.Item name="sort_order" label="Order">
-            <InputNumber min={1} max={999} style={{ width: "100%" }} />
           </Form.Item>
 
           <Form.Item name="is_active" label="Offered" valuePropName="checked">

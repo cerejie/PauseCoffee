@@ -105,6 +105,12 @@ export const cardSub = style({
   lineHeight: 1.55,
 });
 
+/// Sign in / create account. The tab strip carries the heading weight, so it
+/// sits tight under the card title rather than adding a second gap.
+export const authTabs = style({
+  marginTop: 14,
+});
+
 export const submit = style({
   width: "100%",
   height: 48,

@@ -1,4 +1,4 @@
-import { Col, ColorPicker, Form, Input, InputNumber, Modal, Row, Select, Switch } from "antd";
+import { Col, ColorPicker, Form, Input, Modal, Row, Select, Switch } from "antd";
 import { menuGroupOptions } from "../../../enums/menu.group.enum";
 import { useCategoryFormHook } from "../../../hook/data/admin/category.form.hook";
 
@@ -46,20 +46,12 @@ const CategoryFormModal = () => {
           </Col>
         </Row>
 
-        <Form.Item
-          name="slug"
-          label="Slug"
-          extra="Left blank, it is built from the name."
-        >
-          <Input placeholder="non-coffee" />
-        </Form.Item>
-
         <Form.Item name="tagline" label="Tagline">
           <Input maxLength={80} placeholder="Cold, creamy, no espresso" />
         </Form.Item>
 
         <Row gutter={12}>
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item
               name="accent_color"
               label="Accent"
@@ -68,12 +60,7 @@ const CategoryFormModal = () => {
               <ColorPicker format="hex" showText />
             </Form.Item>
           </Col>
-          <Col span={8}>
-            <Form.Item name="sort_order" label="Order">
-              <InputNumber min={1} max={999} style={{ width: "100%" }} />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item name="is_active" label="On the menu" valuePropName="checked">
               <Switch />
             </Form.Item>

@@ -11,13 +11,16 @@ import {
 import type { IAddonRequest } from "../../../models/data/menu/menu.request";
 import type { IAddon } from "../../../models/data/menu/menu.response";
 import { adminServices } from "../../../services/data/admin/admin.services";
+import { nextSortOrder } from "../../../utils/masterfile.utils";
 import { supabaseError } from "../../../utils/supabase.utils";
 import { useModal } from "../../common/modal.hook";
 
-const blankAddon: IAddonRequest = {
+/// The sort order is not typed any more — a new add-on goes to the end.
+type AddonFormValues = Omit<IAddonRequest, "sort_order">;
+
+const blankAddon: AddonFormValues = {
   name: "",
   price: 0,
-  sort_order: 99,
   is_active: true,
   category_ids: [],
 };
@@ -25,7 +28,7 @@ const blankAddon: IAddonRequest = {
 /// Add-ons are a short, flat list — list and form live together rather than
 /// splitting a five-row table across two hooks.
 export const useAddonListHook = () => {
-  const [form] = Form.useForm<IAddonRequest>();
+  const [form] = Form.useForm<AddonFormValues>();
   const queryClient = useQueryClient();
   const { notification } = App.useApp();
   const { modal, openModal, closeModal } = useModal<IAddon>(adminAddonFormModalKey);
@@ -79,7 +82,6 @@ export const useAddonListHook = () => {
             id: editing.id,
             name: editing.name,
             price: Number(editing.price),
-            sort_order: editing.sort_order,
             is_active: editing.is_active,
             category_ids: categoryIdsByAddon.get(editing.id) ?? [],
           }
@@ -88,12 +90,13 @@ export const useAddonListHook = () => {
   }, [modal.visible, editing, categoryIdsByAddon, form]);
 
   const mutation = useMutation({
-    mutationFn: (values: IAddonRequest) =>
+    mutationFn: (values: AddonFormValues) =>
       adminServices.saveAddon({
         ...values,
         id: editing?.id,
         price: Number(values.price),
         category_ids: values.category_ids ?? [],
+        sort_order: editing?.sort_order ?? nextSortOrder(query.data ?? []),
       }),
 
     onSuccess: (addon) => {
@@ -135,6 +138,6 @@ export const useAddonListHook = () => {
       form.resetFields();
       closeModal();
     },
-    onSubmit: (values: IAddonRequest) => mutation.mutate(values),
+    onSubmit: (values: AddonFormValues) => mutation.mutate(values),
   };
 };

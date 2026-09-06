@@ -1,9 +1,11 @@
-import { LockOutlined, MailOutlined } from "@ant-design/icons";
-import { Form, Input } from "antd";
+import { Tabs } from "antd";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import RegisterForm from "../../components/account/form/RegisterForm";
+import SignInForm from "../../components/account/form/SignInForm";
 import BrandMark from "../../components/common/brand/BrandMark";
-import { useLoginFormHook } from "../../hook/account/login.form.hook";
 import {
+  authTabs,
   backHome,
   brandCopy,
   brandFoot,
@@ -11,15 +13,17 @@ import {
   brandPane,
   brandTop,
   card,
-  cardSub,
   cardTitle,
   formPane,
   shell,
-  submit,
 } from "../../styles/admin/login.css";
 
+type AuthTab = "signin" | "register";
+
 const AdminLoginView = () => {
-  const { form, isSubmitting, onSubmit } = useLoginFormHook();
+  // Genuinely local: the pane dies with this screen the moment a session
+  // exists, and nothing outside it reads which tab is showing.
+  const [tab, setTab] = useState<AuthTab>("signin");
 
   return (
     <div className={shell}>
@@ -36,50 +40,26 @@ const AdminLoginView = () => {
           </p>
         </div>
 
-        <p className={brandFoot}>Staff access only</p>
+        <p className={brandFoot}>Approved accounts only</p>
       </aside>
 
       <section className={formPane}>
         <div className={card}>
-          <h2 className={cardTitle}>Sign in</h2>
-          <p className={cardSub}>
-            Use the staff account your manager set up for you.
-          </p>
+          <h2 className={cardTitle}>Pause admin</h2>
 
-          <Form form={form} layout="vertical" onFinish={onSubmit} requiredMark={false}>
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                { required: true, message: "Enter your email." },
-                { type: "email", message: "That doesn't look like an email." },
-              ]}
-            >
-              <Input
-                size="large"
-                autoComplete="username"
-                prefix={<MailOutlined style={{ opacity: 0.45 }} />}
-                placeholder="barista@pausecoffee.ph"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              label="Password"
-              rules={[{ required: true, message: "Enter your password." }]}
-            >
-              <Input.Password
-                size="large"
-                autoComplete="current-password"
-                prefix={<LockOutlined style={{ opacity: 0.45 }} />}
-                placeholder="••••••••"
-              />
-            </Form.Item>
-
-            <button type="submit" className={submit} disabled={isSubmitting}>
-              {isSubmitting ? "Signing in…" : "Sign in"}
-            </button>
-          </Form>
+          <Tabs
+            className={authTabs}
+            activeKey={tab}
+            onChange={(key) => setTab(key as AuthTab)}
+            items={[
+              { key: "signin", label: "Sign in", children: <SignInForm /> },
+              {
+                key: "register",
+                label: "Create account",
+                children: <RegisterForm onRegistered={() => setTab("signin")} />,
+              },
+            ]}
+          />
 
           <Link to="/" className={backHome}>
             ← Back to the menu

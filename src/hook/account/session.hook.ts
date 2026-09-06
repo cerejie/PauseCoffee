@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { AccessStatusEnum } from "../../enums/access.status.enum";
+import { UserRoleEnum } from "../../enums/role.enum";
 import { adminServices } from "../../services/data/admin/admin.services";
 import { useSessionStore } from "../../store/common/session.store";
 import { supabase } from "../../utils/supabase.utils";
@@ -55,11 +57,17 @@ export const useSessionHook = () => {
     };
   }, [setProfile, setReady, setSession]);
 
+  const isStaff = Boolean(
+    session && profile && profile.status === AccessStatusEnum.Approved,
+  );
+
   return {
     session,
     profile,
     ready,
-    /// Signed in AND on the staff table — a bare auth user is not enough.
-    isStaff: Boolean(session && profile),
+    /// Signed in AND holding an approved profile — a bare auth user is not
+    /// enough, and neither is a sign-up nobody has let in yet.
+    isStaff,
+    isSuperAdmin: isStaff && profile?.role === UserRoleEnum.SuperAdmin,
   };
 };

@@ -1,4 +1,4 @@
-import { style, keyframes } from "@vanilla-extract/css";
+import { globalStyle, keyframes, style } from "@vanilla-extract/css";
 import {
   colorBorder,
   colorBorderSoft,
@@ -101,23 +101,53 @@ export const siderFooter = style({
   borderTop: "1px solid rgba(255,255,255,0.1)",
 });
 
-export const siderUser = style({
+/// The account block at the foot of the sider. It is a button, not a label —
+/// signing out lives behind it, which is the only place a desktop user looks
+/// for it.
+export const siderUser = style({});
+
+globalStyle(`${siderUser}.ant-btn`, {
   display: "flex",
   alignItems: "center",
+  justifyContent: "flex-start",
   gap: 10,
-  padding: "8px 6px 12px",
+  width: "100%",
+  height: "auto",
+  padding: "8px 6px",
+  border: "none",
+  boxShadow: "none",
+  borderRadius: radiusMd,
+  background: "transparent",
+  color: "#EADFCF",
+  textAlign: "left",
+  minWidth: 0,
+});
+
+globalStyle(`${siderUser}.ant-btn:not(:disabled):hover`, {
+  background: "rgba(255,255,255,0.08)",
+  color: "#F7EFE3",
 });
 
 export const siderAvatar = style({
   width: 32,
   height: 32,
   borderRadius: radiusPill,
-  backgroundColor: "rgba(255,255,255,0.12)",
+  backgroundColor: colorPrimary,
+  color: colorEspresso,
   display: "grid",
   placeItems: "center",
   fontSize: 13,
   fontWeight: 700,
   flexShrink: 0,
+});
+
+export const siderUserMeta = style({
+  flex: 1,
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: 2,
+  lineHeight: 1.2,
 });
 
 export const siderUserName = style({
@@ -132,7 +162,26 @@ export const siderUserName = style({
 export const siderUserRole = style({
   fontSize: 10.5,
   opacity: 0.55,
-  textTransform: "capitalize",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+});
+
+export const siderUserCaret = style({
+  flexShrink: 0,
+  fontSize: 10,
+  opacity: 0.5,
+});
+
+/// The dropdown renders in a portal, outside the root that carries the style
+/// contract, so it is styled by class rather than by token.
+export const siderUserMenu = style({});
+
+globalStyle(`${siderUserMenu} .ant-dropdown-menu`, {
+  minWidth: 190,
+  padding: 6,
+  borderRadius: radiusMd,
+  boxShadow: shadowLifted,
 });
 
 // --------------------------------------------------------------------- body
@@ -286,4 +335,13 @@ export const toolbarControl = style({
   alignItems: "center",
   gap: 8,
   marginLeft: "auto",
+});
+
+/// Sign-out lives in the sider's account menu on desktop. The sider is hidden
+/// under 900px, so the header keeps a button for phones and only for phones.
+export const headerSignOut = style({
+  display: "none",
+  "@media": {
+    "screen and (max-width: 900px)": { display: "inline-flex" },
+  },
 });

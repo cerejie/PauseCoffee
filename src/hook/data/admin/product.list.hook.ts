@@ -9,15 +9,29 @@ import {
 import { adminProductFormModalKey } from "../../../keys/modal.keys";
 import type { IProduct } from "../../../models/data/menu/menu.response";
 import { adminServices } from "../../../services/data/admin/admin.services";
+import { useMasterfileStore } from "../../../store/data/menu/masterfile.store";
 import { supabaseError } from "../../../utils/supabase.utils";
 import { useModal } from "../../common/modal.hook";
 
 /// The menu masterfile table: products with their sizes, tagged with the
 /// category and group they sit under. The form owns its own pickers.
+///
+/// The four filters are applied here rather than in the query — the whole menu
+/// is a page or two of rows and is already in cache for the customer app, so
+/// re-fetching per keystroke would buy nothing.
 export const useProductListHook = () => {
   const queryClient = useQueryClient();
   const { notification, modal: confirm } = App.useApp();
   const { openModal } = useModal<IProduct>(adminProductFormModalKey);
+
+  const search = useMasterfileStore((s) => s.productSearch);
+  const setSearch = useMasterfileStore((s) => s.setProductSearch);
+  const group = useMasterfileStore((s) => s.productGroup);
+  const setGroup = useMasterfileStore((s) => s.setProductGroup);
+  const categoryId = useMasterfileStore((s) => s.productCategoryId);
+  const setCategoryId = useMasterfileStore((s) => s.setProductCategoryId);
+  const onMenu = useMasterfileStore((s) => s.productOnMenu);
+  const setOnMenu = useMasterfileStore((s) => s.setProductOnMenu);
 
   const categoriesQuery = useQuery({
     queryKey: [adminCategoriesQueryKey],
@@ -34,9 +48,21 @@ export const useProductListHook = () => {
     [categoriesQuery.data],
   );
 
-  const rows = useMemo(
+  /// Only the categories that belong to the chosen group — offering Pastries
+  /// while the table is filtered to Drinks would only ever return nothing.
+  const categoryOptions = useMemo(
     () =>
-      (productsQuery.data ?? []).map((product) => ({
+      (categoriesQuery.data ?? [])
+        .filter((category) => !group || category.menu_group === group)
+        .map((category) => ({ value: category.id, label: category.name })),
+    [categoriesQuery.data, group],
+  );
+
+  const rows = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+
+    return (productsQuery.data ?? [])
+      .map((product) => ({
         ...product,
         product_sizes: [...product.product_sizes].sort(
           (a, b) => a.sort_order - b.sort_order,
@@ -44,9 +70,17 @@ export const useProductListHook = () => {
         categoryName: categoriesById.get(product.category_id)?.name ?? "—",
         categoryAccent: categoriesById.get(product.category_id)?.accent_color,
         menuGroup: categoriesById.get(product.category_id)?.menu_group ?? null,
-      })),
-    [productsQuery.data, categoriesById],
-  );
+      }))
+      .filter((product) => !group || product.menuGroup === group)
+      .filter((product) => !categoryId || product.category_id === categoryId)
+      .filter((product) => onMenu === null || product.is_active === onMenu)
+      .filter(
+        (product) =>
+          !needle ||
+          product.name.toLowerCase().includes(needle) ||
+          (product.description ?? "").toLowerCase().includes(needle),
+      );
+  }, [productsQuery.data, categoriesById, search, group, categoryId, onMenu]);
 
   const activeMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
@@ -87,6 +121,15 @@ export const useProductListHook = () => {
 
   return {
     rows,
+    categoryOptions,
+    search,
+    setSearch,
+    group,
+    setGroup,
+    categoryId,
+    setCategoryId,
+    onMenu,
+    setOnMenu,
     isLoading: productsQuery.isLoading || categoriesQuery.isLoading,
     isFetching: productsQuery.isFetching,
     refetch: productsQuery.refetch,

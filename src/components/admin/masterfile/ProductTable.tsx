@@ -1,11 +1,17 @@
-import { EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Button, Switch, Tag, Tooltip, type TableProps } from "antd";
+import {
+  EditOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { Button, Input, Select, Switch, Tag, Tooltip, type TableProps } from "antd";
 import { useMemo } from "react";
 import CardTable from "../../common/table/CardTable";
 import { TwoLineCell } from "../../common/table/cells/TwoLineCell";
 import { useProductListHook } from "../../../hook/data/admin/product.list.hook";
 import {
   menuGroupLabels,
+  menuGroupOptions,
   type MenuGroupEnum,
 } from "../../../enums/menu.group.enum";
 import type { IProduct } from "../../../models/data/menu/menu.response";
@@ -15,6 +21,7 @@ import {
   panel,
   toolbar,
   toolbarControl,
+  toolbarSearch,
 } from "../../../styles/layout/admin.layout.css";
 import ProductFormModal from "./ProductFormModal";
 
@@ -24,9 +31,23 @@ type ProductRow = IProduct & {
   menuGroup: MenuGroupEnum | null;
 };
 
+const onMenuOptions = [
+  { value: true, label: "On the menu" },
+  { value: false, label: "Hidden" },
+];
+
 const ProductTable = () => {
   const {
     rows,
+    categoryOptions,
+    search,
+    setSearch,
+    group,
+    setGroup,
+    categoryId,
+    setCategoryId,
+    onMenu,
+    setOnMenu,
     isLoading,
     isFetching,
     refetch,
@@ -112,11 +133,48 @@ const ProductTable = () => {
   return (
     <div className={panel}>
       <div className={toolbar}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => openForm()}>
-          New item
-        </Button>
+        <div className={toolbarSearch}>
+          <Input
+            allowClear
+            prefix={<SearchOutlined style={{ opacity: 0.45 }} />}
+            placeholder="Search an item…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+
+        <Select
+          allowClear
+          placeholder="Any menu"
+          style={{ minWidth: 140 }}
+          options={menuGroupOptions}
+          value={group}
+          onChange={(value) => setGroup(value ?? null)}
+        />
+
+        <Select
+          allowClear
+          placeholder="Any category"
+          style={{ minWidth: 170 }}
+          options={categoryOptions}
+          value={categoryId}
+          onChange={(value) => setCategoryId(value ?? null)}
+        />
+
+        <Select
+          allowClear
+          placeholder="On menu"
+          style={{ minWidth: 150 }}
+          options={onMenuOptions}
+          value={onMenu}
+          onChange={(value) => setOnMenu(value ?? null)}
+        />
 
         <div className={toolbarControl}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => openForm()}>
+            New item
+          </Button>
+
           <Tooltip title="Refresh">
             <Button
               icon={<ReloadOutlined />}

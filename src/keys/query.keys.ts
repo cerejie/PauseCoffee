@@ -12,3 +12,4 @@ export const adminStatsQueryKey = "admin-stats";
 export const sessionQueryKey = "session";
 export const adminSizesQueryKey = "admin-sizes";
 export const adminCategoryAddonsQueryKey = "admin-category-addons";
+export const adminUsersQueryKey = "admin-users";

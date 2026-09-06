@@ -10,20 +10,23 @@ import {
 import type { ISizeRequest } from "../../../models/data/menu/menu.request";
 import type { ISize } from "../../../models/data/menu/menu.response";
 import { adminServices } from "../../../services/data/admin/admin.services";
+import { nextSortOrder } from "../../../utils/masterfile.utils";
 import { supabaseError } from "../../../utils/supabase.utils";
 import { useModal } from "../../common/modal.hook";
 
-const blankSize: ISizeRequest = {
+/// The sort order is not typed any more — a new size goes to the end.
+type SizeFormValues = Omit<ISizeRequest, "sort_order">;
+
+const blankSize: SizeFormValues = {
   name: "",
   menu_group: null,
-  sort_order: 99,
   is_active: true,
 };
 
 /// Sizes are a short, flat masterfile — list and form live together, the same
 /// shape as add-ons. A size carries no price: the price is per product.
 export const useSizeListHook = () => {
-  const [form] = Form.useForm<ISizeRequest>();
+  const [form] = Form.useForm<SizeFormValues>();
   const queryClient = useQueryClient();
   const { notification } = App.useApp();
   const { modal, openModal, closeModal } = useModal<ISize>(adminSizeFormModalKey);
@@ -65,7 +68,6 @@ export const useSizeListHook = () => {
             id: editing.id,
             name: editing.name,
             menu_group: editing.menu_group,
-            sort_order: editing.sort_order,
             is_active: editing.is_active,
           }
         : blankSize,
@@ -73,12 +75,13 @@ export const useSizeListHook = () => {
   }, [modal.visible, editing, form]);
 
   const mutation = useMutation({
-    mutationFn: (values: ISizeRequest) =>
+    mutationFn: (values: SizeFormValues) =>
       adminServices.saveSize({
         ...values,
         id: editing?.id,
         name: values.name.trim(),
         menu_group: values.menu_group ?? null,
+        sort_order: editing?.sort_order ?? nextSortOrder(query.data ?? []),
       }),
 
     onSuccess: (size) => {
@@ -115,6 +118,6 @@ export const useSizeListHook = () => {
       form.resetFields();
       closeModal();
     },
-    onSubmit: (values: ISizeRequest) => mutation.mutate(values),
+    onSubmit: (values: SizeFormValues) => mutation.mutate(values),
   };
 };
