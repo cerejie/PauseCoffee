@@ -1,6 +1,7 @@
 import { Segmented } from "antd";
 import { MenuGroupEnum, menuGroupLabels } from "../../../enums/menu.group.enum";
-import { groupTabs } from "../../../styles/menu/menu.css";
+import { groupTabIcon, groupTabLabel, groupTabs } from "../../../styles/menu/menu.css";
+import MenuGroupIcon from "./MenuGroupIcon";
 
 interface GroupTabsProps {
   groups: MenuGroupEnum[];
@@ -16,12 +17,16 @@ const GroupTabs = ({ groups, activeGroup, onSelect }: GroupTabsProps) => {
   return (
     <div className={groupTabs}>
       <Segmented<MenuGroupEnum>
-        size="large"
         value={activeGroup ?? groups[0]}
         onChange={onSelect}
         options={groups.map((group) => ({
           value: group,
-          label: menuGroupLabels[group],
+          label: (
+            <span className={groupTabLabel}>
+              <MenuGroupIcon group={group} className={groupTabIcon} />
+              {menuGroupLabels[group]}
+            </span>
+          ),
         }))}
       />
     </div>

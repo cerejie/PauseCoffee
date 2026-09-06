@@ -9,13 +9,11 @@ import {
   cardBadge,
   cardBody,
   cardDescription,
+  cardFoot,
   cardPrice,
+  cardPriceBlock,
   cardPriceLabel,
-  cardSizeChip,
-  cardSizes,
-  cardTail,
   cardTitle,
-  cardTitleRow,
 } from "../../../styles/menu/menu.css";
 import { mediaCard } from "../../../styles/common/media.css";
 
@@ -44,38 +42,27 @@ const ProductCard = ({ product, section, onSelect }: ProductCardProps) => {
       <ProductImage src={product.image_url} alt={product.name} className={mediaCard} />
 
       <span className={cardBody}>
-        <span className={cardTitleRow}>
-          <span className={cardTitle}>{product.name}</span>
-          {product.badge ? <span className={cardBadge}>{product.badge}</span> : null}
-        </span>
+        {product.badge ? <span className={cardBadge}>{product.badge}</span> : null}
+
+        <span className={cardTitle}>{product.name}</span>
 
         {product.description ? (
           <span className={cardDescription}>{product.description}</span>
         ) : null}
 
-        {/* Only worth showing when there is a choice to make. */}
-        {sizes.length > 1 ? (
-          <span className={cardSizes}>
-            {sizes.map((size) => (
-              <span key={size.id} className={cardSizeChip}>
-                {size.label} · {formatPeso(size.price)}
-              </span>
-            ))}
+        <span className={cardFoot}>
+          <span className={cardPriceBlock}>
+            {/* One size is a fact — "12 oz". Several is a floor, and the
+                drawer is where the customer picks which one. */}
+            <span className={cardPriceLabel}>
+              {sizes.length > 1 ? "from" : sizes[0]?.label}
+            </span>
+            <span className={cardPrice}>{formatPeso(cheapest)}</span>
           </span>
-        ) : null}
-      </span>
 
-      <span className={cardTail}>
-        <span style={{ textAlign: "right" }}>
-          <span className={cardPriceLabel}>
-            {sizes.length > 1 ? "from" : sizes[0]?.label}
+          <span className={cardAdd}>
+            <PlusOutlined />
           </span>
-          <span className={cardPrice} style={{ display: "block", marginTop: 2 }}>
-            {formatPeso(cheapest)}
-          </span>
-        </span>
-        <span className={cardAdd}>
-          <PlusOutlined />
         </span>
       </span>
     </button>

@@ -41,9 +41,13 @@ export const mediaFallback = style({
 
 // ---------------------------------------------------------------- callers
 
+/// Stretched rather than square: the card is a row, so the picture taking the
+/// full height of it is what keeps a two-line description from leaving a gap
+/// beside the thumbnail.
 export const mediaCard = style({
-  width: 86,
-  height: 86,
+  alignSelf: "stretch",
+  width: 94,
+  minHeight: 112,
   borderRadius: radiusMd,
   fontSize: 22,
 });

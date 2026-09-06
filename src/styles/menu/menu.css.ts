@@ -1,4 +1,4 @@
-import { createVar, fallbackVar, keyframes, style } from "@vanilla-extract/css";
+import { fallbackVar, globalStyle, keyframes, style } from "@vanilla-extract/css";
 import {
   accent,
   accentInk,
@@ -10,11 +10,14 @@ import {
   colorCanvasVeil,
   colorEspresso,
   colorPrimary,
+  colorPrimaryDeep,
   colorSurface,
   colorSurfaceAlt,
+  colorSurfaceVeil,
   colorTextBody,
   colorTextHeading,
   colorTextMuted,
+  fontBody,
   fontDisplay,
   radiusLg,
   radiusMd,
@@ -69,10 +72,6 @@ export const heroSearch = style({
 /// stickyHeaderHeight; the fallback only covers the first paint.
 const railTop = fallbackVar(stickyHeaderHeight, "68px");
 
-/// Geometry of the active chip, measured by CategoryRail and handed back in.
-export const railThumbX = createVar();
-export const railThumbWidth = createVar();
-
 export const rail = style({
   position: "sticky",
   top: railTop,
@@ -107,86 +106,49 @@ export const railPinned = style({
   boxShadow: "0 12px 26px -20px rgba(59, 35, 23, 0.6)",
 });
 
-/// The chips share one track so the indicator can travel behind all of them
-/// without an opaque neighbour cutting it in half mid-slide.
+/// Each chip is its own pill, so the row can breathe rather than reading as one
+/// segmented control — the gaps are what let the current category stand out by
+/// filling with its own accent.
 export const railTrack = style({
-  position: "relative",
   display: "inline-flex",
-  gap: 2,
-  padding: 4,
-  borderRadius: radiusPill,
-  border: `1px solid ${colorBorderSoft}`,
-  backgroundColor: colorSurfaceAlt,
-});
-
-export const railThumb = style({
-  position: "absolute",
-  insetBlock: 4,
-  left: 0,
-  width: railThumbWidth,
-  borderRadius: radiusPill,
-  backgroundColor: accent,
-  boxShadow: shadowSoft,
-  pointerEvents: "none",
-  transform: `translateX(${railThumbX})`,
-  // The travel is the whole point: scrolling the menu glides the pill between
-  // categories instead of snapping it, so the rail reads as one moving thing.
-  transition:
-    "transform .34s cubic-bezier(.22,1,.36,1), width .34s cubic-bezier(.22,1,.36,1), background-color .34s ease, opacity .2s ease",
-  "@media": {
-    "(prefers-reduced-motion: reduce)": { transition: "opacity .2s ease" },
-  },
-});
-
-/// Before the first measurement there is nowhere honest to put it.
-export const railThumbHidden = style({
-  opacity: 0,
+  gap: 10,
+  padding: "2px 0",
 });
 
 export const railChip = style({
-  position: "relative",
-  zIndex: 1,
   flexShrink: 0,
   display: "inline-flex",
   alignItems: "center",
-  gap: 7,
-  padding: "8px 15px",
+  padding: "9px 19px",
   borderRadius: radiusPill,
-  border: "none",
-  background: "none",
-  color: colorTextBody,
-  fontSize: 13.5,
-  fontWeight: 600,
+  border: `1px solid ${colorBorderSoft}`,
+  backgroundColor: colorSurface,
+  boxShadow: shadowSoft,
+  color: colorTextHeading,
+  fontSize: 12.5,
+  fontWeight: 700,
+  letterSpacing: "0.07em",
+  textTransform: "uppercase",
   whiteSpace: "nowrap",
   cursor: "pointer",
-  transition: "color .22s ease",
+  transition:
+    "background-color .24s ease, color .24s ease, border-color .24s ease, box-shadow .24s ease, transform .18s ease",
   selectors: {
-    "&:hover": { color: colorTextHeading },
+    "&:hover": { borderColor: colorBorder, transform: "translateY(-1px)" },
   },
-});
-
-export const railChipActive = style({
-  color: accentOn,
-  selectors: {
-    "&:hover": { color: accentOn },
-  },
-});
-
-export const railDot = style({
-  width: 7,
-  height: 7,
-  borderRadius: radiusPill,
-  backgroundColor: accent,
-  transition: "background-color .22s ease, transform .22s ease",
   "@media": {
     "(prefers-reduced-motion: reduce)": { transition: "none" },
   },
 });
 
-export const railDotActive = style({
-  backgroundColor: accentOn,
-  opacity: 0.85,
-  transform: "scale(1.15)",
+export const railChipActive = style({
+  backgroundColor: accent,
+  borderColor: "transparent",
+  color: accentOn,
+  boxShadow: shadowLifted,
+  selectors: {
+    "&:hover": { borderColor: "transparent" },
+  },
 });
 
 // ------------------------------------------------------------------ sections
@@ -231,9 +193,10 @@ export const sectionHead = style({
 
 export const sectionTitle = style({
   fontFamily: fontDisplay,
-  fontSize: 25,
-  fontWeight: 600,
-  letterSpacing: "-0.02em",
+  fontSize: 22,
+  fontWeight: 700,
+  letterSpacing: "0.03em",
+  textTransform: "uppercase",
   color: colorTextHeading,
   margin: 0,
 });
@@ -241,7 +204,7 @@ export const sectionTitle = style({
 export const sectionRule = style({
   flex: 1,
   height: 1,
-  backgroundImage: `linear-gradient(to right, ${accentSoft}, transparent)`,
+  backgroundColor: colorBorder,
 });
 
 export const sectionCount = style({
@@ -276,10 +239,9 @@ export const grid = style({
 export const card = style({
   position: "relative",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 14,
-  padding: "12px 16px 12px 12px",
+  alignItems: "stretch",
+  gap: 13,
+  padding: 10,
   borderRadius: radiusLg,
   border: `1px solid ${colorBorderSoft}`,
   backgroundColor: colorSurface,
@@ -311,28 +273,18 @@ export const card = style({
 });
 
 export const cardBody = style({
+  flex: 1,
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  gap: 4,
+  alignItems: "flex-start",
+  gap: 5,
+  padding: "5px 4px 3px 0",
 });
 
-export const cardTitleRow = style({
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  flexWrap: "wrap",
-});
-
-export const cardTitle = style({
-  fontFamily: fontDisplay,
-  fontSize: 16.5,
-  fontWeight: 600,
-  color: colorTextHeading,
-  lineHeight: 1.25,
-  margin: 0,
-});
-
+/// Above the name rather than beside it: "BEST SELLER" is the first thing worth
+/// reading on the card, and hanging it off the title wrapped the name in half
+/// the column widths the grid produces.
 export const cardBadge = style({
   fontSize: 9.5,
   fontWeight: 700,
@@ -342,6 +294,17 @@ export const cardBadge = style({
   borderRadius: radiusPill,
   color: accentInk,
   backgroundColor: accentSoft,
+  marginBottom: 1,
+});
+
+export const cardTitle = style({
+  fontFamily: fontBody,
+  fontSize: 15,
+  fontWeight: 700,
+  letterSpacing: "-0.005em",
+  color: colorTextHeading,
+  lineHeight: 1.3,
+  margin: 0,
 });
 
 export const cardDescription = style({
@@ -354,6 +317,9 @@ export const cardDescription = style({
   overflow: "hidden",
 });
 
+/// The customer card prices from one line now — "12 oz  P210", or "from" when
+/// there is a choice — so the per-size chips are left for the admin product
+/// table, which is where every size still has to be readable at a glance.
 export const cardSizes = style({
   display: "flex",
   gap: 6,
@@ -370,32 +336,45 @@ export const cardSizeChip = style({
   backgroundColor: colorSurfaceAlt,
 });
 
-export const cardTail = style({
+/// Pushed to the bottom of the body, so the price and the add button sit on one
+/// line across a whole row however far the descriptions run.
+export const cardFoot = style({
+  marginTop: "auto",
+  paddingTop: 10,
+  width: "100%",
+  display: "flex",
+  alignItems: "flex-end",
+  justifyContent: "space-between",
+  gap: 10,
+});
+
+export const cardPriceBlock = style({
+  minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  alignItems: "flex-end",
-  gap: 10,
-  flexShrink: 0,
+  gap: 4,
 });
 
 export const cardPriceLabel = style({
-  fontSize: 10,
-  letterSpacing: "0.12em",
+  fontSize: 10.5,
+  letterSpacing: "0.1em",
   textTransform: "uppercase",
   color: colorTextMuted,
-});
-
-export const cardPrice = style({
-  fontFamily: fontDisplay,
-  fontSize: 19,
-  fontWeight: 600,
-  color: colorTextHeading,
   lineHeight: 1,
 });
 
+export const cardPrice = style({
+  fontFamily: fontBody,
+  fontSize: 17,
+  fontWeight: 700,
+  color: colorTextHeading,
+  lineHeight: 1.1,
+});
+
 export const cardAdd = style({
-  width: 34,
-  height: 34,
+  flexShrink: 0,
+  width: 36,
+  height: 36,
   borderRadius: radiusPill,
   backgroundColor: colorPrimary,
   color: colorEspresso,
@@ -435,4 +414,72 @@ export const menuFooterNote = style({
 export const groupTabs = style({
   display: "flex",
   paddingTop: 18,
+});
+
+export const groupTabLabel = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 10,
+  fontSize: 16,
+  fontWeight: 600,
+  lineHeight: 1,
+});
+
+export const groupTabIcon = style({
+  fontSize: 22,
+  flexShrink: 0,
+});
+
+/// The control is one floating pill with the active group filled in. antd owns
+/// the markup, so the shape is written onto its classes; scoping to the wrapper
+/// puts these above the app-wide segmented rules in styles/common.
+globalStyle(`${groupTabs} .ant-segmented`, {
+  padding: 5,
+  borderRadius: radiusPill,
+  border: `1px solid ${colorBorderSoft}`,
+  backgroundColor: colorSurfaceVeil,
+  boxShadow: shadowSoft,
+});
+
+/// rc-segmented puts the flex row on `-group`, not on the root, so the app-wide
+/// gap has to be cleared there or the two pills sit apart inside the track.
+globalStyle(`${groupTabs} .ant-segmented-group`, {
+  gap: 0,
+});
+
+globalStyle(`${groupTabs} .ant-segmented-item`, {
+  border: "none",
+  borderRadius: radiusPill,
+  backgroundColor: "transparent",
+  color: colorTextBody,
+});
+
+globalStyle(`${groupTabs} .ant-segmented-item:hover:not(.ant-segmented-item-selected)`, {
+  backgroundColor: "transparent",
+  color: colorTextHeading,
+});
+
+globalStyle(`${groupTabs} .ant-segmented-item-label`, {
+  padding: "10px 26px",
+  minHeight: "unset",
+  lineHeight: 1,
+});
+
+/// The thumb is what the eye follows while the tab slides, so it carries the
+/// same fill as the seat it lands in — otherwise the amber drops out for the
+/// length of the animation.
+globalStyle(
+  `${groupTabs} .ant-segmented-item-selected, ${groupTabs} .ant-segmented-thumb`,
+  {
+    borderRadius: radiusPill,
+    backgroundImage: `linear-gradient(135deg, ${colorPrimary}, ${colorPrimaryDeep})`,
+    boxShadow: shadowSoft,
+  },
+);
+
+/// Espresso rather than the mockup's white: 16px type on the brand amber is
+/// about 2:1 in white, and every other amber control in the app already inks
+/// itself this way.
+globalStyle(`${groupTabs} .ant-segmented-item-selected`, {
+  color: colorEspresso,
 });
