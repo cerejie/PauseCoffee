@@ -14,6 +14,9 @@ export interface ICartLine {
   categoryId: string;
   categorySlug: string;
   accentColor: string;
+  /// Copied in alongside the rest of the display copy so the cart renders
+  /// without holding on to the menu it was built from.
+  imageUrl: string | null;
   sizeId: string;
   sizeLabel: string;
   unitPrice: number;

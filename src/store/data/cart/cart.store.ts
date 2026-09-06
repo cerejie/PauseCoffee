@@ -92,7 +92,22 @@ export const useCartStore = create<States & Actions>()(
     {
       name: cartStorageKey,
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
+      // A cart persisted before menu photography has lines with no image. It
+      // hydrates without one rather than being discarded — someone mid-order
+      // when the shop deployed must not lose their cart over a thumbnail.
+      migrate: (persisted, version): States & Actions => {
+        const state = persisted as States & Actions;
+        if (version >= 2) return state;
+
+        return {
+          ...state,
+          lines: (state.lines ?? []).map((line) => ({
+            ...line,
+            imageUrl: line.imageUrl ?? null,
+          })),
+        };
+      },
       partialize: (state) => ({ lines: state.lines }),
     },
   ),

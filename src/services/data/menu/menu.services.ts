@@ -1,9 +1,11 @@
 import { supabase } from "../../../utils/supabase.utils";
+import { withMenuImageUrl } from "../../../utils/storage.utils";
 import type {
   IAddon,
   ICategory,
   ICategoryAddon,
   IProduct,
+  IProductRow,
 } from "../../../models/data/menu/menu.response";
 
 /// Supabase calls only — no shaping beyond unwrapping the error envelope.
@@ -26,7 +28,7 @@ export const menuServices = {
       .order("sort_order", { ascending: true });
 
     if (error) throw error;
-    return (data ?? []) as IProduct[];
+    return ((data ?? []) as IProductRow[]).map(withMenuImageUrl);
   },
 
   getAddons: async (): Promise<IAddon[]> => {

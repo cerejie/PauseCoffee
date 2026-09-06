@@ -1,4 +1,5 @@
 import { PlusOutlined } from "@ant-design/icons";
+import ProductImage from "../../common/media/ProductImage";
 import { useAccentVars } from "../../../hook/common/accent.hook";
 import type { IMenuSection, IProduct } from "../../../models/data/menu/menu.response";
 import { formatPeso } from "../../../utils/formatter.utils";
@@ -16,6 +17,7 @@ import {
   cardTitle,
   cardTitleRow,
 } from "../../../styles/menu/menu.css";
+import { mediaCard } from "../../../styles/common/media.css";
 
 interface ProductCardProps {
   product: IProduct;
@@ -39,6 +41,8 @@ const ProductCard = ({ product, section, onSelect }: ProductCardProps) => {
       style={accentVars}
       onClick={() => onSelect(product)}
     >
+      <ProductImage src={product.image_url} alt={product.name} className={mediaCard} />
+
       <span className={cardBody}>
         <span className={cardTitleRow}>
           <span className={cardTitle}>{product.name}</span>

@@ -9,11 +9,14 @@ import type {
   ICategory,
   ICategoryAddon,
   IProduct,
+  IProductRow,
   ISize,
 } from "../../../models/data/menu/menu.response";
 import type { IStaffProfile } from "../../../store/common/session.store";
 import { emailConfirmUrl } from "../../../constants/auth.constants";
+import { menuImageBucket } from "../../../constants/image.constants";
 import { supabase } from "../../../utils/supabase.utils";
+import { withMenuImageUrl } from "../../../utils/storage.utils";
 
 export const adminServices = {
   signIn: async (email: string, password: string) => {
@@ -154,7 +157,30 @@ export const adminServices = {
       .order("sort_order", { ascending: true });
 
     if (error) throw error;
-    return (data ?? []) as IProduct[];
+    return ((data ?? []) as IProductRow[]).map(withMenuImageUrl);
+  },
+
+  // ---------------------------------------------------------- product image
+
+  /// Uploads under a fresh random name and hands back the path the row stores.
+  /// Nothing is ever overwritten in place: a re-shot drink gets a new path, so
+  /// a CDN copy of the old file can never be served against the new one.
+  uploadProductImage: async (file: Blob): Promise<string> => {
+    const path = `products/${crypto.randomUUID()}.webp`;
+
+    const { error } = await supabase.storage.from(menuImageBucket).upload(path, file, {
+      contentType: file.type,
+      // Immutable by construction — the name changes whenever the bytes do.
+      cacheControl: "31536000",
+    });
+
+    if (error) throw error;
+    return path;
+  },
+
+  deleteProductImage: async (path: string) => {
+    const { error } = await supabase.storage.from(menuImageBucket).remove([path]);
+    if (error) throw error;
   },
 
   /// Sizes are replaced wholesale rather than diffed: a product has two or
@@ -168,6 +194,7 @@ export const adminServices = {
       name: request.name,
       description: request.description ?? null,
       badge: request.badge ?? null,
+      image_path: request.image_path,
       sort_order: request.sort_order,
       is_active: request.is_active,
     };
@@ -177,7 +204,7 @@ export const adminServices = {
       : await supabase.from("products").insert(fields).select().single();
 
     if (error) throw error;
-    const saved = data as IProduct;
+    const saved = withMenuImageUrl(data as IProductRow);
 
     const keepIds = sizes.map((size) => size.id).filter(Boolean) as string[];
     let deleteQuery = supabase.from("product_sizes").delete().eq("product_id", saved.id);

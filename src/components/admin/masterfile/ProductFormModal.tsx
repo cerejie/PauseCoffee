@@ -2,6 +2,7 @@ import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Col, Form, Input, InputNumber, Modal, Row, Select, Switch } from "antd";
 import { menuGroupOptions } from "../../../enums/menu.group.enum";
 import { useProductFormHook } from "../../../hook/data/admin/product.form.hook";
+import ProductImageUpload from "./ProductImageUpload";
 
 /// Create/update an item and its price tiers. Group narrows the category and
 /// the size list; sizes are a Form.List because a House Blend has two tiers and
@@ -15,6 +16,7 @@ const ProductFormModal = () => {
     categoryOptions,
     sizeOptions,
     onGroupChange,
+    trackUpload,
     close,
     onSubmit,
   } = useProductFormHook();
@@ -63,21 +65,37 @@ const ProductFormModal = () => {
           </Col>
         </Row>
 
-        <Form.Item
-          name="name"
-          label="Name"
-          rules={[{ required: true, message: "Give it a name." }]}
-        >
-          <Input placeholder="Spanish Latte" />
-        </Form.Item>
+        <Row gutter={16}>
+          <Col flex="120px">
+            {/* Required: the customer menu leads with the picture, and an item
+                without one is the odd tile out on the grid. */}
+            <Form.Item
+              name="image_path"
+              label="Photo"
+              rules={[{ required: true, message: "Every item needs a photo." }]}
+            >
+              <ProductImageUpload onUploaded={trackUpload} />
+            </Form.Item>
+          </Col>
 
-        <Form.Item name="description" label="Description">
-          <Input.TextArea
-            rows={2}
-            maxLength={140}
-            placeholder="Condensed milk, full-bodied espresso"
-          />
-        </Form.Item>
+          <Col flex="auto">
+            <Form.Item
+              name="name"
+              label="Name"
+              rules={[{ required: true, message: "Give it a name." }]}
+            >
+              <Input placeholder="Spanish Latte" />
+            </Form.Item>
+
+            <Form.Item name="description" label="Description">
+              <Input.TextArea
+                rows={3}
+                maxLength={140}
+                placeholder="Condensed milk, full-bodied espresso"
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Row gutter={12}>
           <Col span={10}>

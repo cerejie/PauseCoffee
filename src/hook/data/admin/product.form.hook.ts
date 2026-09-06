@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Form } from "antd";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { MenuGroupEnum } from "../../../enums/menu.group.enum";
 import { adminProductFormModalKey } from "../../../keys/modal.keys";
 import {
@@ -21,6 +21,7 @@ const blankProduct: IProductRequest = {
   name: "",
   description: "",
   badge: "",
+  image_path: null,
   sort_order: 99,
   is_active: true,
   sizes: [{ size_id: "", label: "", price: 0, sort_order: 1 }],
@@ -37,6 +38,24 @@ export const useProductFormHook = () => {
 
   const editing = modal.data;
   const watchedGroup = Form.useWatch("menu_group", form);
+
+  /// Every path this modal session put in the bucket. An upload happens the
+  /// moment a photo is picked, so cancelling — or replacing it twice before
+  /// saving — would otherwise leave files no row will ever point at.
+  const uploadedPaths = useRef<string[]>([]);
+
+  const trackUpload = useCallback((path: string) => {
+    uploadedPaths.current.push(path);
+  }, []);
+
+  /// Best effort on purpose: an orphan costs a few dozen kilobytes, and a
+  /// failed cleanup must never turn a saved item into an error.
+  const discardImages = useCallback((paths: readonly string[]) => {
+    paths.forEach((path) => {
+      void adminServices.deleteProductImage(path).catch(() => undefined);
+    });
+    uploadedPaths.current = [];
+  }, []);
 
   const categoriesQuery = useQuery({
     queryKey: [adminCategoriesQueryKey],
@@ -92,6 +111,7 @@ export const useProductFormHook = () => {
         name: editing.name,
         description: editing.description ?? "",
         badge: editing.badge ?? "",
+        image_path: editing.image_path,
         sort_order: editing.sort_order,
         is_active: editing.is_active,
         sizes: editing.product_sizes.map((size) => ({
@@ -108,6 +128,10 @@ export const useProductFormHook = () => {
 
     form.setFieldsValue(blankProduct);
   }, [modal.visible, editing, categories, form]);
+
+  useEffect(() => {
+    if (modal.visible) uploadedPaths.current = [];
+  }, [modal.visible]);
 
   /// Switching group invalidates whatever was picked under the old one.
   const onGroupChange = () => {
@@ -135,6 +159,15 @@ export const useProductFormHook = () => {
       }),
 
     onSuccess: (product) => {
+      // The photo the item kept stays; everything else this session uploaded —
+      // a first pick that was replaced, or the previous one being swapped out
+      // — no longer has a row pointing at it.
+      const replaced = editing?.image_path;
+      discardImages([
+        ...uploadedPaths.current.filter((path) => path !== product.image_path),
+        ...(replaced && replaced !== product.image_path ? [replaced] : []),
+      ]);
+
       form.resetFields();
       closeModal();
       void queryClient.invalidateQueries({ queryKey: [adminProductsQueryKey] });
@@ -163,7 +196,9 @@ export const useProductFormHook = () => {
     sizeOptions,
     hasCategories: categories.length > 0,
     onGroupChange,
+    trackUpload,
     close: () => {
+      discardImages(uploadedPaths.current);
       form.resetFields();
       closeModal();
     },

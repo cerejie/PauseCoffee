@@ -20,6 +20,7 @@ import {
 } from "../common/vars.css";
 
 export const drawerRoot = style({
+  position: "relative",
   display: "flex",
   flexDirection: "column",
   height: "100%",
@@ -64,6 +65,7 @@ export const headDescription = style({
 
 export const closeButton = style({
   position: "absolute",
+  zIndex: 2,
   top: 18,
   right: 18,
   width: 32,

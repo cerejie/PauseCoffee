@@ -7,6 +7,7 @@ import {
 import { Button, Input, Select, Switch, Tag, Tooltip, type TableProps } from "antd";
 import { useMemo } from "react";
 import CardTable from "../../common/table/CardTable";
+import ProductImage from "../../common/media/ProductImage";
 import { TwoLineCell } from "../../common/table/cells/TwoLineCell";
 import { useProductListHook } from "../../../hook/data/admin/product.list.hook";
 import {
@@ -17,6 +18,7 @@ import {
 import type { IProduct } from "../../../models/data/menu/menu.response";
 import { formatPeso } from "../../../utils/formatter.utils";
 import { cardSizeChip, cardSizes } from "../../../styles/menu/menu.css";
+import { mediaCell, mediaCellRow } from "../../../styles/common/media.css";
 import {
   panel,
   toolbar,
@@ -63,7 +65,14 @@ const ProductTable = () => {
         dataIndex: "name",
         key: "name",
         render: (_value, record) => (
-          <TwoLineCell top={record.name} bottom={record.description ?? "—"} />
+          <div className={mediaCellRow}>
+            <ProductImage
+              src={record.image_url}
+              alt={record.name}
+              className={mediaCell}
+            />
+            <TwoLineCell top={record.name} bottom={record.description ?? "—"} />
+          </div>
         ),
       },
       {

@@ -105,6 +105,7 @@ export const useProductOptionsHook = () => {
       categoryId: section.id,
       categorySlug: section.slug,
       accentColor: section.accent_color,
+      imageUrl: product.image_url,
       sizeId: selectedSize.id,
       sizeLabel: selectedSize.label,
       unitPrice: Number(selectedSize.price),

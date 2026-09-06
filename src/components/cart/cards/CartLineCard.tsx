@@ -1,4 +1,5 @@
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
+import ProductImage from "../../common/media/ProductImage";
 import { useAccentVars } from "../../../hook/common/accent.hook";
 import { temperatureLabel } from "../../../enums/order.enum";
 import type { ICartLine } from "../../../models/data/order/cart.model";
@@ -19,6 +20,7 @@ import {
   stepperButton,
   stepperValue,
 } from "../../../styles/cart/cart.css";
+import { mediaLine } from "../../../styles/common/media.css";
 
 interface CartLineCardProps {
   line: ICartLine;
@@ -39,6 +41,8 @@ const CartLineCard = ({
 
   return (
     <article className={lineClass} style={accentVars}>
+      <ProductImage src={line.imageUrl} alt={line.productName} className={mediaLine} />
+
       <div className={lineBody}>
         <h3 className={lineTitle}>{line.productName}</h3>
 

@@ -32,6 +32,9 @@ export interface IProductRequest {
   name: string;
   description?: string | null;
   badge?: string | null;
+  /// Required by the form, nullable in the column: the seeded menu predates
+  /// photography, so an old row can still be read back without one.
+  image_path: string | null;
   sort_order: number;
   is_active: boolean;
   sizes: IProductSizeRequest[];

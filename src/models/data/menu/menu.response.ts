@@ -19,10 +19,18 @@ export interface IProduct {
   name: string;
   description: string | null;
   badge: string | null;
+  /// Object path inside the menu-images bucket — what the row actually stores.
+  image_path: string | null;
+  /// Resolved from `image_path` at the service boundary. Not a column: the
+  /// CDN host is derived, never persisted.
+  image_url: string | null;
   sort_order: number;
   is_active: boolean;
   product_sizes: IProductSize[];
 }
+
+/// A product exactly as Supabase returns it, before the image URL is resolved.
+export type IProductRow = Omit<IProduct, "image_url">;
 
 /// A size the admin can pick when pricing a product. `menu_group` null means
 /// the size is offered to every group.

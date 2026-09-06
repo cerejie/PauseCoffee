@@ -165,7 +165,7 @@ export const sectionTagline = style({
 
 export const grid = style({
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
   gap: 12,
   "@media": {
     "screen and (max-width: 640px)": {
@@ -182,7 +182,7 @@ export const card = style({
   alignItems: "center",
   justifyContent: "space-between",
   gap: 14,
-  padding: "16px 16px 16px 18px",
+  padding: "12px 16px 12px 12px",
   borderRadius: radiusLg,
   border: `1px solid ${colorBorderSoft}`,
   backgroundColor: colorSurface,
