@@ -33,7 +33,6 @@ const blankCategory = (categories: readonly ICategory[]): CategoryFormValues => 
   name: "",
   tagline: "",
   accent_color: nextAccent(categories),
-  has_temperature: true,
   has_sweetness: false,
   is_active: true,
 });
@@ -72,7 +71,6 @@ export const useCategoryFormHook = () => {
             name: editing.name,
             tagline: editing.tagline ?? "",
             accent_color: editing.accent_color,
-            has_temperature: editing.has_temperature,
             has_sweetness: editing.has_sweetness,
             is_active: editing.is_active,
           }

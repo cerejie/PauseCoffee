@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { App, Form } from "antd";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { MenuGroupEnum, menuGroupLabels } from "../../../enums/menu.group.enum";
+import { ServeTemperatureEnum } from "../../../enums/order.enum";
 import { adminProductFormModalKey } from "../../../keys/modal.keys";
 import {
   adminCategoriesQueryKey,
@@ -15,6 +16,17 @@ import { adminServices } from "../../../services/data/admin/admin.services";
 import { supabaseError } from "../../../utils/supabase.utils";
 import { useModal } from "../../common/modal.hook";
 
+/// A fresh price row. Drinks are offered both ways until the admin narrows it;
+/// food is never asked about temperature at all.
+const blankSize = (menuGroup: MenuGroupEnum, sortOrder: number) => ({
+  size_id: "",
+  label: "",
+  price: 0,
+  serve_temperature:
+    menuGroup === MenuGroupEnum.Drinks ? ServeTemperatureEnum.Both : null,
+  sort_order: sortOrder,
+});
+
 const blankProduct: IProductRequest = {
   menu_group: MenuGroupEnum.Drinks,
   category_id: "",
@@ -24,7 +36,7 @@ const blankProduct: IProductRequest = {
   image_path: null,
   sort_order: 99,
   is_active: true,
-  sizes: [{ size_id: "", label: "", price: 0, sort_order: 1 }],
+  sizes: [blankSize(MenuGroupEnum.Drinks, 1)],
 };
 
 /// Create and update in one hook — `modal.data` presence is what decides which.
@@ -129,6 +141,7 @@ export const useProductFormHook = () => {
           size_id: size.size_id ?? "",
           label: size.label,
           price: Number(size.price),
+          serve_temperature: size.serve_temperature,
           sort_order: size.sort_order,
           is_active: size.is_active,
         })),
@@ -156,9 +169,7 @@ export const useProductFormHook = () => {
       form.setFieldsValue({ menu_group: next });
 
       if (previous && previous !== next) {
-        form.setFieldsValue({
-          sizes: [{ size_id: "", label: "", price: 0, sort_order: 1 }],
-        });
+        form.setFieldsValue({ sizes: [blankSize(next, 1)] });
       }
     },
     [categories, form],
@@ -177,6 +188,12 @@ export const useProductFormHook = () => {
           ...size,
           label: sizes.find((row) => row.id === size.size_id)?.name ?? size.label,
           price: Number(size.price),
+          // Only drinks are served hot or iced; a row that changed menus keeps
+          // no temperature it can no longer be asked about.
+          serve_temperature:
+            values.menu_group === MenuGroupEnum.Drinks
+              ? (size.serve_temperature ?? ServeTemperatureEnum.Both)
+              : null,
           sort_order: index + 1,
         })),
       }),
@@ -218,6 +235,9 @@ export const useProductFormHook = () => {
     /// Drinks or food, settled by the chosen category — the item form asks for
     /// sizes or types off the back of it.
     menuGroup: group,
+    /// The row factory the form's "Add a size" button reaches for, so a new row
+    /// starts with the temperature the current menu group expects.
+    blankSize,
     categoryOptions,
     sizeOptions,
     hasCategories: categories.length > 0,

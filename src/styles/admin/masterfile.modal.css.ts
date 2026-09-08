@@ -146,6 +146,36 @@ export const sizeRow = style({
   marginBottom: 10,
 });
 
+/// Drinks carry a third field — hot, iced or both — beside the price. Four
+/// columns is more than a phone-width modal can hold, so below that the fields
+/// stack two-up and the remove button keeps its own lane on the right.
+export const sizeRowServed = style({
+  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 40px",
+
+  "@media": {
+    "screen and (max-width: 620px)": {
+      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) 40px",
+      gridTemplateAreas: `"portion price remove" "served served remove"`,
+    },
+  },
+});
+
+globalStyle(`${sizeRowServed} > *:nth-child(1)`, {
+  "@media": { "screen and (max-width: 620px)": { gridArea: "portion" } },
+});
+
+globalStyle(`${sizeRowServed} > *:nth-child(2)`, {
+  "@media": { "screen and (max-width: 620px)": { gridArea: "price" } },
+});
+
+globalStyle(`${sizeRowServed} > *:nth-child(3)`, {
+  "@media": { "screen and (max-width: 620px)": { gridArea: "served" } },
+});
+
+globalStyle(`${sizeRowServed} > *:nth-child(4)`, {
+  "@media": { "screen and (max-width: 620px)": { gridArea: "remove", alignSelf: "start" } },
+});
+
 export const addRowButton = style({});
 
 globalStyle(`${addRowButton}.ant-btn`, {

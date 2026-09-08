@@ -11,10 +11,11 @@ import {
   sectionTitle,
 } from "../../../styles/admin/masterfile.modal.css";
 
-/// Create/update a category. The temperature and sweetness switches are what
-/// the customer's options drawer reads, so they belong to the category rather
-/// than being repeated on every product under it — which is why they sit in
-/// their own ruled section rather than among the category's own details.
+/// Create/update a category. Sweetness is a category-wide question — every
+/// matcha is asked it, no coffee is — so it belongs here rather than on every
+/// product under it, in its own ruled section rather than among the category's
+/// own details. Hot or iced is not: it is set per price row on the item form,
+/// where a 16oz can be iced-only and the 12oz beside it both ways.
 const CategoryFormModal = () => {
   const { form, visible, isEditing, isSaving, close, onSubmit } = useCategoryFormHook();
 
@@ -99,32 +100,19 @@ const CategoryFormModal = () => {
           <div className={sectionHead}>
             <h3 className={sectionTitle}>Customer options</h3>
             <span className={sectionHint}>
-              What the options drawer asks for items in here.
+              What the options drawer asks for items in here. Hot or iced is set
+              per price row on the item itself.
             </span>
           </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="has_temperature"
-                label="Ask hot or iced"
-                valuePropName="checked"
-                style={{ marginBottom: 0 }}
-              >
-                <Switch />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="has_sweetness"
-                label="Ask sweetness"
-                valuePropName="checked"
-                style={{ marginBottom: 0 }}
-              >
-                <Switch />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item
+            name="has_sweetness"
+            label="Ask sweetness"
+            valuePropName="checked"
+            style={{ marginBottom: 0 }}
+          >
+            <Switch />
+          </Form.Item>
         </div>
       </Form>
     </FormModal>

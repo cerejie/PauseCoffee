@@ -1,10 +1,6 @@
 import { CheckOutlined } from "@ant-design/icons";
 import { Input } from "antd";
-import {
-  TemperatureEnum,
-  sweetnessLevels,
-  temperatureLabel,
-} from "../../../enums/order.enum";
+import { sweetnessLevels, temperatureLabel } from "../../../enums/order.enum";
 import type { useProductOptionsHook } from "../../../hook/data/menu/product.options.hook";
 import { formatPeso } from "../../../utils/formatter.utils";
 import {
@@ -56,11 +52,22 @@ const OptionTile = ({
   </button>
 );
 
-/// Size, temperature, sweetness and add-ons. Groups the category does not offer
-/// are simply absent — a coffee has no sweetness row, a fruit tea no add-ons.
+/// Size, temperature, sweetness and add-ons. Groups on offer for neither the
+/// category nor the chosen size are simply absent — a coffee has no sweetness
+/// row, a cookie no "Serve it" row, a fruit tea no add-ons.
 const ProductOptionsBody = ({ options }: ProductOptionsBodyProps) => {
-  const { section, sizes, draft, setSize, setTemperature, setSweetness, toggleAddon, setNotes } =
-    options;
+  const {
+    section,
+    sizes,
+    draft,
+    temperatures,
+    temperature,
+    setSize,
+    setTemperature,
+    setSweetness,
+    toggleAddon,
+    setNotes,
+  } = options;
 
   if (!section) return null;
 
@@ -88,18 +95,23 @@ const ProductOptionsBody = ({ options }: ProductOptionsBodyProps) => {
         </div>
       )}
 
-      {section.has_temperature && (
+      {temperatures.length > 0 && (
         <div className={group}>
           <div className={groupLabel}>
             <span className={groupTitle}>Serve it</span>
+            {temperatures.length === 1 ? (
+              <span className={groupHint}>
+                {temperatureLabel[temperatures[0]]} only
+              </span>
+            ) : null}
           </div>
           <div className={optionRow}>
-            {Object.values(TemperatureEnum).map((temperature) => (
+            {temperatures.map((option) => (
               <OptionTile
-                key={temperature}
-                label={temperatureLabel[temperature]}
-                active={draft.temperature === temperature}
-                onClick={() => setTemperature(temperature)}
+                key={option}
+                label={temperatureLabel[option]}
+                active={temperature === option}
+                onClick={() => setTemperature(option)}
               />
             ))}
           </div>

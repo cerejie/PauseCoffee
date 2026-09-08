@@ -1,4 +1,5 @@
 import type { MenuGroupEnum } from "../../../enums/menu.group.enum";
+import type { ServeTemperatureEnum } from "../../../enums/order.enum";
 
 export interface ICategoryRequest {
   id?: string;
@@ -7,7 +8,6 @@ export interface ICategoryRequest {
   name: string;
   tagline?: string | null;
   accent_color: string;
-  has_temperature: boolean;
   has_sweetness: boolean;
   sort_order: number;
   is_active: boolean;
@@ -20,6 +20,9 @@ export interface IProductSizeRequest {
   size_id: string;
   label: string;
   price: number;
+  /// Asked for on drink rows only; null on food, which is never served hot or
+  /// iced by choice.
+  serve_temperature: ServeTemperatureEnum | null;
   sort_order: number;
   is_active?: boolean;
 }

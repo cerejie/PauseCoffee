@@ -65,9 +65,7 @@ const CategoryTable = () => {
         key: "options",
         render: (_value, record) => (
           <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {record.has_temperature ? <Tag>Hot / iced</Tag> : null}
-            {record.has_sweetness ? <Tag>Sweetness</Tag> : null}
-            {!record.has_temperature && !record.has_sweetness ? "—" : null}
+            {record.has_sweetness ? <Tag>Sweetness</Tag> : "—"}
           </span>
         ),
       },

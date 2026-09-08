@@ -1,6 +1,7 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Col, Form, Input, InputNumber, Row, Select, Switch } from "antd";
 import { MenuGroupEnum, menuPortionNoun } from "../../../enums/menu.group.enum";
+import { serveTemperatureOptions } from "../../../enums/order.enum";
 import { useProductFormHook } from "../../../hook/data/admin/product.form.hook";
 import FormModal from "../../common/modal/FormModal";
 import ProductImageUpload from "./ProductImageUpload";
@@ -12,12 +13,17 @@ import {
   sectionHint,
   sectionTitle,
   sizeRow,
+  sizeRowServed,
 } from "../../../styles/admin/masterfile.modal.css";
 
 /// Create/update an item and its price tiers. The category settles which menu
 /// the item is on, and that decides what the price rows are called: a drink is
 /// priced per size, food per type ("1pc", "3pcs set"). They are a Form.List
 /// either way, because a House Blend has two tiers and a cookie has one.
+///
+/// Hot or iced is settled here too, per price row rather than per category — a
+/// 16oz can be iced-only while the 12oz beside it goes both ways. Food rows
+/// drop the field entirely; a cookie is never served hot by request.
 const ProductFormModal = () => {
   const {
     form,
@@ -25,6 +31,7 @@ const ProductFormModal = () => {
     isEditing,
     isSaving,
     menuGroup,
+    blankSize,
     categoryOptions,
     sizeOptions,
     onCategoryChange,
@@ -34,6 +41,7 @@ const ProductFormModal = () => {
   } = useProductFormHook();
 
   const portion = menuPortionNoun[menuGroup] ?? menuPortionNoun[MenuGroupEnum.Drinks];
+  const isDrink = menuGroup === MenuGroupEnum.Drinks;
 
   return (
     <FormModal
@@ -151,7 +159,8 @@ const ProductFormModal = () => {
           <div className={sectionHead}>
             <h3 className={sectionTitle}>{portion.many} &amp; prices</h3>
             <span className={sectionHint}>
-              Set the available {portion.one}s and their prices.
+              Set the available {portion.one}s
+              {isDrink ? ", their prices and how they are served" : " and their prices"}.
             </span>
           </div>
 
@@ -169,7 +178,10 @@ const ProductFormModal = () => {
             {(fields, { add, remove }, { errors }) => (
               <>
                 {fields.map((field) => (
-                  <div className={sizeRow} key={field.key}>
+                  <div
+                    className={isDrink ? `${sizeRow} ${sizeRowServed}` : sizeRow}
+                    key={field.key}
+                  >
                     <Form.Item
                       name={[field.name, "size_id"]}
                       style={{ marginBottom: 0 }}
@@ -199,6 +211,19 @@ const ProductFormModal = () => {
                       />
                     </Form.Item>
 
+                    {isDrink && (
+                      <Form.Item
+                        name={[field.name, "serve_temperature"]}
+                        style={{ marginBottom: 0 }}
+                        rules={[{ required: true, message: "Served how?" }]}
+                      >
+                        <Select
+                          placeholder="Served how?"
+                          options={serveTemperatureOptions}
+                        />
+                      </Form.Item>
+                    )}
+
                     <Button
                       icon={<DeleteOutlined />}
                       danger
@@ -212,9 +237,7 @@ const ProductFormModal = () => {
                 <Button
                   className={addRowButton}
                   icon={<PlusOutlined />}
-                  onClick={() =>
-                    add({ size_id: "", label: "", price: 0, sort_order: fields.length + 1 })
-                  }
+                  onClick={() => add(blankSize(menuGroup, fields.length + 1))}
                   block
                 >
                   Add a {portion.one}

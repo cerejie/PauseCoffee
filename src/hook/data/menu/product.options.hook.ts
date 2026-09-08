@@ -1,9 +1,13 @@
 import { App } from "antd";
 import { useCallback, useEffect, useMemo } from "react";
-import { TemperatureEnum, sweetnessLevels } from "../../../enums/order.enum";
+import { serveTemperatureChoices, sweetnessLevels } from "../../../enums/order.enum";
 import { productOptionsModalKey } from "../../../keys/modal.keys";
 import type { ICartLine } from "../../../models/data/order/cart.model";
-import type { IMenuSection, IProduct } from "../../../models/data/menu/menu.response";
+import type {
+  IMenuSection,
+  IProduct,
+  IProductSize,
+} from "../../../models/data/menu/menu.response";
 import { useOptionsStore } from "../../../store/data/cart/options.store";
 import { formatPeso } from "../../../utils/formatter.utils";
 import { useCartHook } from "../cart/cart.hook";
@@ -44,6 +48,11 @@ export const useProductOptionsHook = () => {
     [product],
   );
 
+  /// How a size may be served travels with the size, so the tiles on offer
+  /// change as the customer moves between them.
+  const temperaturesFor = (size: IProductSize | undefined) =>
+    size?.serve_temperature ? serveTemperatureChoices[size.serve_temperature] : [];
+
   // Re-seed whenever the drawer opens on a different product or line. Keyed on
   // the ids rather than the objects so a menu refetch does not wipe a selection
   // the customer is halfway through making.
@@ -64,7 +73,7 @@ export const useProductOptionsHook = () => {
 
     seedDraft({
       sizeId: sizes[0]?.id ?? null,
-      temperature: section.has_temperature ? TemperatureEnum.Iced : null,
+      temperature: temperaturesFor(sizes[0])[0] ?? null,
       sweetness: section.has_sweetness ? sweetnessLevels[0] : null,
       addonIds: [],
       quantity: 1,
@@ -76,6 +85,22 @@ export const useProductOptionsHook = () => {
   const selectedSize = useMemo(
     () => sizes.find((size) => size.id === draft.sizeId) ?? sizes[0],
     [sizes, draft.sizeId],
+  );
+
+  const temperatures = useMemo(
+    () => temperaturesFor(selectedSize),
+    [selectedSize],
+  );
+
+  /// Derived rather than corrected in place: switching from a both-ways 12oz to
+  /// an iced-only 16oz must not leave "Hot" selected, and the draft is stale for
+  /// exactly one render either way.
+  const temperature = useMemo(
+    () =>
+      draft.temperature && temperatures.includes(draft.temperature)
+        ? draft.temperature
+        : (temperatures[0] ?? null),
+    [draft.temperature, temperatures],
   );
 
   const selectedAddons = useMemo(
@@ -109,7 +134,7 @@ export const useProductOptionsHook = () => {
       sizeId: selectedSize.id,
       sizeLabel: selectedSize.label,
       unitPrice: Number(selectedSize.price),
-      temperature: section.has_temperature ? draft.temperature : null,
+      temperature,
       sweetness: section.has_sweetness ? draft.sweetness : null,
       addons: selectedAddons.map((addon) => ({
         id: addon.id,
@@ -134,6 +159,7 @@ export const useProductOptionsHook = () => {
     section,
     selectedSize,
     selectedAddons,
+    temperature,
     draft,
     editing,
     addLine,
@@ -151,6 +177,9 @@ export const useProductOptionsHook = () => {
     sizes,
     draft,
     selectedSize,
+    /// The tiles to offer, and which of them is on — both settled by the size.
+    temperatures,
+    temperature,
     unitPrice,
     total,
     open,

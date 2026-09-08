@@ -1,4 +1,5 @@
 import type { MenuGroupEnum } from "../../../enums/menu.group.enum";
+import type { ServeTemperatureEnum } from "../../../enums/order.enum";
 
 export interface IProductSize {
   id: string;
@@ -9,6 +10,9 @@ export interface IProductSize {
   size_id: string | null;
   label: string;
   price: number;
+  /// How this tier is served. Null means the item is not a drink and the
+  /// options drawer asks nothing about temperature.
+  serve_temperature: ServeTemperatureEnum | null;
   sort_order: number;
   is_active: boolean;
 }
@@ -57,7 +61,6 @@ export interface ICategory {
   name: string;
   tagline: string | null;
   accent_color: string;
-  has_temperature: boolean;
   has_sweetness: boolean;
   sort_order: number;
   is_active: boolean;

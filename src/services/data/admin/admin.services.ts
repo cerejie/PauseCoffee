@@ -235,6 +235,7 @@ export const adminServices = {
         size_id: size.size_id,
         label: size.label,
         price: size.price,
+        serve_temperature: size.serve_temperature,
         sort_order: index + 1,
         is_active: size.is_active ?? true,
       })),
