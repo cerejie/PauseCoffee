@@ -64,7 +64,7 @@ export const useProductFormHook = () => {
   /// failed cleanup must never turn a saved item into an error.
   const discardImages = useCallback((paths: readonly string[]) => {
     paths.forEach((path) => {
-      void adminServices.deleteProductImage(path).catch(() => undefined);
+      void adminServices.deleteMenuImage(path).catch(() => undefined);
     });
     uploadedPaths.current = [];
   }, []);

@@ -1,7 +1,7 @@
 import {
   CoffeeOutlined,
   HistoryOutlined,
-  TeamOutlined,
+  SettingOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import type { IRoute } from "../models/common/route.model";
@@ -9,7 +9,7 @@ import { UserRoleEnum } from "../enums/role.enum";
 import MasterfileView from "../pages/Admin/MasterfileView";
 import OrderHistoryView from "../pages/Admin/OrderHistoryView";
 import OrderQueueView from "../pages/Admin/OrderQueueView";
-import UsersView from "../pages/Admin/UsersView";
+import SettingsView from "../pages/Admin/SettingsView";
 
 /// Plain data — the sider, the mobile tab bar and the router all read this one
 /// list, so a new screen is a single entry rather than three edits.
@@ -41,14 +41,15 @@ export const adminViewRoutes: IRoute[] = [
     Component: MasterfileView,
   },
   {
-    key: "users",
-    path: "users",
-    label: "Users",
-    description: "Approve, revoke and remove admin accounts",
-    icon: <TeamOutlined />,
-    // Who gets in is the developer's call, not the shop's — the only thing an
-    // admin cannot reach.
-    role: [UserRoleEnum.SuperAdmin],
-    Component: UsersView,
+    key: "settings",
+    path: "settings",
+    label: "Settings",
+    description: "Online link, trading hours, payment details and accounts",
+    icon: <SettingOutlined />,
+    // The shop's own money details and trading hours are the shop's call, so
+    // an admin gets this screen. The Users tab inside it is still the
+    // superadmin's alone — see SettingsView.
+    role: [UserRoleEnum.SuperAdmin, UserRoleEnum.Admin],
+    Component: SettingsView,
   },
 ];

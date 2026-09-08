@@ -6,7 +6,10 @@ import {
 } from "@ant-design/icons";
 import { Button, Upload } from "antd";
 import ProductImage from "../../common/media/ProductImage";
-import { useProductImageHook } from "../../../hook/data/admin/product.image.hook";
+import {
+  menuImagePreset,
+  useImageUploadHook,
+} from "../../../hook/data/admin/image.upload.hook";
 import {
   menuImageAccept,
   menuImageMaxBytes,
@@ -36,7 +39,7 @@ const maxMegabytes = Math.round(menuImageMaxBytes / (1024 * 1024));
 /// tells antd to forget the file: the upload is a Supabase Storage call, and
 /// the only thing the form carries afterwards is the path it returned.
 const ProductImageUpload = ({ value, onChange, onUploaded }: ProductImageUploadProps) => {
-  const { previewUrl, isUploading, upload } = useProductImageHook(value);
+  const { previewUrl, isUploading, upload } = useImageUploadHook(value, menuImagePreset);
 
   const handleFile = async (file: File) => {
     const path = await upload(file);

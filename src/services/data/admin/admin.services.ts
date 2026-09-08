@@ -180,8 +180,11 @@ export const adminServices = {
   /// Uploads under a fresh random name and hands back the path the row stores.
   /// Nothing is ever overwritten in place: a re-shot drink gets a new path, so
   /// a CDN copy of the old file can never be served against the new one.
-  uploadProductImage: async (file: Blob): Promise<string> => {
-    const path = `products/${crypto.randomUUID()}.webp`;
+  /// The bucket takes more than product photography now — the shop's payment QR
+  /// lives here too — so the folder is the caller's to choose. Everything else
+  /// about the upload is identical, which is why this is one function.
+  uploadMenuImage: async (file: Blob, folder = "products"): Promise<string> => {
+    const path = `${folder}/${crypto.randomUUID()}.webp`;
 
     const { error } = await supabase.storage.from(menuImageBucket).upload(path, file, {
       contentType: file.type,
@@ -193,7 +196,7 @@ export const adminServices = {
     return path;
   },
 
-  deleteProductImage: async (path: string) => {
+  deleteMenuImage: async (path: string) => {
     const { error } = await supabase.storage.from(menuImageBucket).remove([path]);
     if (error) throw error;
   },

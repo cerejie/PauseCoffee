@@ -74,11 +74,17 @@ export const brandFonts = {
 /// least forgiving place in the app: at their original values six of the seven
 /// sat between 3.3 and 4.4, `pending` worst of all.
 export const statusPalette: Record<string, { fg: string; bg: string }> = {
+  // Violet, so "waiting on a person" never reads as "waiting on the barista" —
+  // pending's amber is two steps further along and must stay distinguishable.
+  awaiting_approval: { fg: "#6A4B9C", bg: "#EDE6F7" },
   pending: { fg: "#8B5A15", bg: "#FBEBD2" },
   preparing: { fg: "#3B6981", bg: "#E1EFF6" },
   ready: { fg: "#307145", bg: "#DFF1E4" },
   completed: { fg: "#6B4A38", bg: "#F0E6D6" },
   cancelled: { fg: "#B0402C", bg: "#F8E0DC" },
+  // Slate rather than another red: a rejection is a refusal to start, not a
+  // failure part-way through, and the board must not confuse the two.
+  rejected: { fg: "#5C5A57", bg: "#EBE8E3" },
   approved: { fg: "#307145", bg: "#DFF1E4" },
   revoked: { fg: "#B0402C", bg: "#F8E0DC" },
 };

@@ -1,6 +1,7 @@
-import { ArrowRightOutlined, ShopOutlined, ShoppingOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined } from "@ant-design/icons";
 import { Form, Input } from "antd";
-import { OrderTypeEnum, orderTypeLabel } from "../../../enums/order.enum";
+import { inStoreOrderTypes, orderTypeLabel } from "../../../enums/order.enum";
+import OrderTypePicker from "./OrderTypePicker";
 import type { useOrderFormHook } from "../../../hook/data/order/order.form.hook";
 import { formatPeso } from "../../../utils/formatter.utils";
 import {
@@ -17,19 +18,11 @@ import {
   totalsGrandLabel,
   totalsGrandValue,
   totalsRow,
-  typeRow,
-  typeTile,
-  typeTileActive,
 } from "../../../styles/cart/cart.css";
 
 interface CheckoutSummaryProps {
   checkout: ReturnType<typeof useOrderFormHook>;
 }
-
-const typeIcons: Record<OrderTypeEnum, React.ReactNode> = {
-  [OrderTypeEnum.DineIn]: <ShopOutlined />,
-  [OrderTypeEnum.TakeOut]: <ShoppingOutlined />,
-};
 
 /// Name, dine-in or take-out, a note, and the button that hands the order to
 /// the counter. antd Form owns the field values — never a store.
@@ -73,7 +66,10 @@ const CheckoutSummary = ({ checkout }: CheckoutSummaryProps) => {
           <div>
             <span className={fieldLabel}>Where are you having it?</span>
             <Form.Item name="order_type" style={{ marginBottom: 0 }}>
-              <OrderTypePicker />
+              <OrderTypePicker
+                types={inStoreOrderTypes}
+                labelFor={(type) => orderTypeLabel[type]}
+              />
             </Form.Item>
           </div>
 
@@ -124,29 +120,5 @@ const CheckoutSummary = ({ checkout }: CheckoutSummaryProps) => {
     </aside>
   );
 };
-
-/// A controlled tile pair, shaped so antd Form can drive it like any input.
-const OrderTypePicker = ({
-  value,
-  onChange,
-}: {
-  value?: OrderTypeEnum;
-  onChange?: (value: OrderTypeEnum) => void;
-}) => (
-  <div className={typeRow}>
-    {Object.values(OrderTypeEnum).map((type) => (
-      <button
-        key={type}
-        type="button"
-        className={value === type ? `${typeTile} ${typeTileActive}` : typeTile}
-        onClick={() => onChange?.(type)}
-        aria-pressed={value === type}
-      >
-        {typeIcons[type]}
-        {orderTypeLabel[type]}
-      </button>
-    ))}
-  </div>
-);
 
 export default CheckoutSummary;

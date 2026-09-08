@@ -1,5 +1,13 @@
-import type { OrderStatusEnum } from "../../../enums/order.enum";
-import type { IPlaceOrderRequest } from "../../../models/data/order/order.request";
+import { OrderStatusEnum } from "../../../enums/order.enum";
+import {
+  paymentProofBucket,
+  paymentProofPrefix,
+  paymentProofSignedUrlSeconds,
+} from "../../../constants/payment.constants";
+import type {
+  IPlaceOrderRequest,
+  IReviewOnlineOrderRequest,
+} from "../../../models/data/order/order.request";
 import type {
   IOrder,
   IOrderDetail,
@@ -16,7 +24,8 @@ export interface IOrderHistoryRequest {
 
 export const orderServices = {
   /// The only write path open to a guest. The RPC prices every line from the
-  /// menu tables, so the payload carries ids and quantities and no money.
+  /// menu tables, so the payload carries ids and quantities and no money — and
+  /// for an online order it verifies the receipt exists before cutting a row.
   placeOrder: async (request: IPlaceOrderRequest): Promise<IOrder> => {
     const { data, error } = await supabase.rpc("place_order", {
       payload: request as unknown as Record<string, unknown>,
@@ -36,12 +45,27 @@ export const orderServices = {
   },
 
   /// Live queue — everything not yet finished, oldest first so the barista
-  /// works top-down.
+  /// works top-down. Sorted by queued_at rather than placed_at: an online order
+  /// approved two hours after it was submitted joins the board where it was
+  /// approved, not ahead of every walk-in that arrived while it waited.
   getQueue: async (): Promise<IOrderTicket[]> => {
     const { data, error } = await supabase
       .from("orders")
       .select("*, order_items(*)")
       .in("status", ["pending", "preparing", "ready"])
+      .order("queued_at", { ascending: true });
+
+    if (error) throw error;
+    return (data ?? []) as unknown as IOrderTicket[];
+  },
+
+  /// The approval inbox. Deliberately its own query and its own key: these are
+  /// not queue tickets, and nothing here may leak onto the barista's board.
+  getOnlineOrders: async (): Promise<IOrderTicket[]> => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("status", OrderStatusEnum.AwaitingApproval)
       .order("placed_at", { ascending: true });
 
     if (error) throw error;
@@ -93,5 +117,55 @@ export const orderServices = {
 
     if (error) throw error;
     return data as unknown as IOrder;
+  },
+
+  /// Approve or reject an online order. The RPC refuses anything that is not
+  /// still awaiting a decision, so a double-click cannot re-stamp a ticket the
+  /// barista has already started.
+  reviewOnlineOrder: async ({
+    orderId,
+    approve,
+    reason,
+  }: IReviewOnlineOrderRequest): Promise<IOrder> => {
+    const { data, error } = await supabase.rpc("review_online_order", {
+      p_order_id: orderId,
+      p_approve: approve,
+      p_reason: reason ?? null,
+    });
+
+    if (error) throw error;
+    return data as unknown as IOrder;
+  },
+
+  /// The guest's receipt upload. Returns the object path, which is the only
+  /// thing the checkout payload carries — the RPC then proves the object is
+  /// really there before it will accept the order.
+  uploadPaymentProof: async (file: Blob): Promise<string> => {
+    const path = `${paymentProofPrefix}/${crypto.randomUUID()}.webp`;
+
+    const { error } = await supabase.storage
+      .from(paymentProofBucket)
+      .upload(path, file, { contentType: "image/webp" });
+
+    if (error) throw error;
+    return path;
+  },
+
+  /// Staff-only read of a receipt. The bucket is private, so this is the whole
+  /// access path — and the URL expires, so a copied link is not a lasting leak.
+  signedProofUrl: async (path: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage
+      .from(paymentProofBucket)
+      .createSignedUrl(path, paymentProofSignedUrlSeconds);
+
+    if (error) throw error;
+    return data?.signedUrl ?? null;
+  },
+
+  /// Frees the image the moment a rejection is confirmed. Best-effort by
+  /// design: migration 0017 has already queued the path, so a failure here
+  /// costs an hour's delay rather than an orphaned file.
+  deletePaymentProof: async (path: string): Promise<void> => {
+    await supabase.storage.from(paymentProofBucket).remove([path]);
   },
 };

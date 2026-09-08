@@ -8,3 +8,6 @@ export const adminAddonFormModalKey = "admin-addon-form-modal";
 export const adminConfirmModalKey = "admin-confirm-modal";
 export const adminSizeFormModalKey = "admin-size-form-modal";
 export const confirmEmailModalKey = "confirm-email-modal";
+export const onlineOrderReviewModalKey = "online-order-review-modal";
+export const onlineOrderRejectModalKey = "online-order-reject-modal";
+export const orderChatDrawerKey = "order-chat-drawer";

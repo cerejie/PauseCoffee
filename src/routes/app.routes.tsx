@@ -45,6 +45,13 @@ export const appRoutes: RouteObject[] = [
             path: route.path,
             Component: route.Component,
           })),
+          // Account management moved into a tab on Settings. Kept as a
+          // redirect because /admin/users is where anyone who used the app
+          // before this change still has their bookmark.
+          {
+            path: "users",
+            element: <Navigate to="/admin/settings" replace />,
+          },
         ],
       },
     ],
