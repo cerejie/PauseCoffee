@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from "react-router-dom";
 import AdminGuard from "../components/common/guard/AdminGuard";
+import OnlineGuard from "../components/common/guard/OnlineGuard";
 import { emailConfirmPath } from "../constants/auth.constants";
 import AdminLayout from "../layouts/AdminLayout";
 import CustomerLayout from "../layouts/CustomerLayout";
@@ -8,6 +9,8 @@ import AdminLoginView from "../pages/Admin/AdminLoginView";
 import CartView from "../pages/Customer/CartView";
 import MenuView from "../pages/Customer/MenuView";
 import NotFoundView from "../pages/NotFoundView";
+import OnlineCartView from "../pages/Online/OnlineCartView";
+import OnlineMenuView from "../pages/Online/OnlineMenuView";
 import OrderTrackerView from "../pages/Customer/OrderTrackerView";
 import { adminViewRoutes } from "./admin.view.routes";
 
@@ -54,6 +57,19 @@ export const appRoutes: RouteObject[] = [
           },
         ],
       },
+    ],
+  },
+  {
+    // The online app, on whatever path the shop has chosen. A dynamic segment
+    // is the lowest-priority match in this tree, so every literal route above
+    // wins first — which is exactly why app_settings refuses a slug that
+    // collides with one of them. OnlineGuard checks the segment against the
+    // settings row and 404s anything that is not it.
+    path: "/:onlineSlug",
+    Component: OnlineGuard,
+    children: [
+      { index: true, Component: OnlineMenuView },
+      { path: "cart", Component: OnlineCartView },
     ],
   },
   { path: "*", Component: NotFoundView },

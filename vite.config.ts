@@ -52,6 +52,10 @@ export default defineConfig({
           if (id.includes("/node_modules/antd/") || id.includes("@ant-design"))
             return "antd";
           if (id.includes("@supabase")) return "supabase";
+          // Only the online delivery form pulls this in, and it does so
+          // lazily — keeping it out of the entry chunk is the point.
+          if (id.includes("/node_modules/leaflet/") || id.includes("react-leaflet"))
+            return "leaflet";
           return undefined;
         },
       },
