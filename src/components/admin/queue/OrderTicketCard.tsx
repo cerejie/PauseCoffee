@@ -3,10 +3,11 @@ import { Tooltip } from "antd";
 import { useAccentVars } from "../../../hook/common/accent.hook";
 import { statusPalette } from "../../../constants/brand.constants";
 import {
+  OrderChannelEnum,
   OrderStatusEnum,
+  describeOrderType,
   nextOrderStatus,
   orderStatusLabel,
-  orderTypeLabel,
 } from "../../../enums/order.enum";
 import type { IOrderTicket } from "../../../models/data/order/order.response";
 import { formatElapsed, formatPeso, minutesSince } from "../../../utils/formatter.utils";
@@ -66,7 +67,13 @@ const OrderTicketCard = ({ ticket, busy, onAdvance, onCancel }: OrderTicketCardP
             {formatElapsed(ticket.placed_at)} · {orderStatusLabel[ticket.status]}
           </div>
         </div>
-        <span className={ticketTypeChip}>{orderTypeLabel[ticket.order_type]}</span>
+        {/* An approved online order is an ordinary ticket from here on, but
+            the barista still wants to know it is going out the door rather
+            than over the counter. */}
+        <span className={ticketTypeChip}>
+          {ticket.order_channel === OrderChannelEnum.Online ? "Online · " : ""}
+          {describeOrderType(ticket.order_type, ticket.order_channel)}
+        </span>
       </header>
 
       <div className={ticketItems}>

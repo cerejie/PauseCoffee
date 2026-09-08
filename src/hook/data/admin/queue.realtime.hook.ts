@@ -2,51 +2,54 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OrderStatusEnum } from "../../../enums/order.enum";
-import { orderQueueQueryKey } from "../../../keys/query.keys";
+import { onlineOrdersQueryKey, orderQueueQueryKey } from "../../../keys/query.keys";
+import type { IOrderTicket } from "../../../models/data/order/order.response";
 import { orderServices } from "../../../services/data/order/order.services";
+import { newOrderChime, onlineOrderChime, playChime } from "../../../utils/chime.utils";
 import { supabase } from "../../../utils/supabase.utils";
 
-/// A short chime when a new ticket lands. Synthesised rather than shipped as an
-/// asset so it works offline and adds nothing to the bundle.
-const playChime = () => {
-  try {
-    const Ctor =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (!Ctor) return;
+/// Announces only what arrived after the board came up.
+///
+/// The first load must not chime once per waiting ticket, so the first set of
+/// ids is recorded silently and everything after it is compared against what
+/// was already there. Returns the rows that are genuinely new.
+const useFreshRows = (rows: IOrderTicket[] | undefined) => {
+  const seen = useRef<Set<string> | null>(null);
+  const [fresh, setFresh] = useState<IOrderTicket[]>([]);
 
-    const ctx = new Ctor();
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.14, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.55);
-    gain.connect(ctx.destination);
+  useEffect(() => {
+    if (!rows) return;
 
-    [880, 1320].forEach((frequency, index) => {
-      const osc = ctx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.value = frequency;
-      osc.connect(gain);
-      osc.start(ctx.currentTime + index * 0.11);
-      osc.stop(ctx.currentTime + 0.6);
-    });
+    const ids = new Set(rows.map((row) => row.id));
 
-    window.setTimeout(() => void ctx.close(), 900);
-  } catch {
-    // Autoplay policy or no audio device — the visual toast still fires.
-  }
+    if (seen.current === null) {
+      seen.current = ids;
+      return;
+    }
+
+    const added = rows.filter((row) => !seen.current?.has(row.id));
+    seen.current = ids;
+
+    if (added.length) setFresh(added);
+  }, [rows]);
+
+  return fresh;
 };
 
-/// The queue's live wire, mounted once by AdminLayout so the chime and the
-/// subscription exist exactly once no matter which admin screen is open.
-/// The board itself reads the same query key through useOrderQueueHook.
+/// The admin app's live wire, mounted once by AdminLayout so the chimes and the
+/// subscription exist exactly once no matter which screen is open.
+///
+/// One channel, two query keys. The queue board reads `orderQueueQueryKey`
+/// through useOrderQueueHook and the approval inbox reads `onlineOrdersQueryKey`
+/// through useOnlineOrdersHook; both are invalidated from the single
+/// subscription here. A second channel would mean a double chime and a double
+/// toast, which is the whole reason this hook exists.
 export const useQueueRealtimeHook = () => {
   const queryClient = useQueryClient();
   const { notification } = App.useApp();
   const [isLive, setIsLive] = useState(false);
 
-  const query = useQuery({
+  const queueQuery = useQuery({
     queryKey: [orderQueueQueryKey],
     queryFn: () => orderServices.getQueue(),
     staleTime: 0,
@@ -54,47 +57,60 @@ export const useQueueRealtimeHook = () => {
     refetchInterval: 45_000,
   });
 
-  // Only announce tickets that appear after the board is up, otherwise the
-  // first load would chime once per waiting order.
-  const seenIds = useRef<Set<string> | null>(null);
+  const onlineQuery = useQuery({
+    queryKey: [onlineOrdersQueryKey],
+    queryFn: () => orderServices.getOnlineOrders(),
+    staleTime: 0,
+    refetchInterval: 45_000,
+  });
 
+  const freshQueue = useFreshRows(queueQuery.data);
+  const freshOnline = useFreshRows(onlineQuery.data);
+
+  // A ticket the barista must start making.
   useEffect(() => {
-    if (!query.data) return;
-
-    const ids = new Set(query.data.map((ticket) => ticket.id));
-
-    if (seenIds.current === null) {
-      seenIds.current = ids;
-      return;
-    }
-
-    const fresh = query.data.filter(
-      (ticket) =>
-        !seenIds.current?.has(ticket.id) && ticket.status === OrderStatusEnum.Pending,
+    const arrivals = freshQueue.filter(
+      (ticket) => ticket.status === OrderStatusEnum.Pending,
     );
+    if (!arrivals.length) return;
 
-    if (fresh.length) {
-      playChime();
-      fresh.forEach((ticket) =>
-        notification.info({
-          message: `New order ${ticket.order_number}`,
-          description: `${ticket.customer_name} · ${ticket.item_count} item${
-            ticket.item_count === 1 ? "" : "s"
-          }`,
-          placement: "topRight",
-          duration: 6,
-        }),
-      );
-    }
+    playChime(newOrderChime);
+    arrivals.forEach((ticket) =>
+      notification.info({
+        message: `New order ${ticket.order_number}`,
+        description: `${ticket.customer_name} · ${ticket.item_count} item${
+          ticket.item_count === 1 ? "" : "s"
+        }`,
+        placement: "topRight",
+        duration: 6,
+      }),
+    );
+  }, [freshQueue, notification]);
 
-    seenIds.current = ids;
-  }, [query.data, notification]);
+  // A payment somebody has to look at. Different tone, and it stays on screen
+  // until dismissed — money is waiting on this one, not a cup.
+  useEffect(() => {
+    if (!freshOnline.length) return;
+
+    playChime(onlineOrderChime);
+    freshOnline.forEach((ticket) =>
+      notification.warning({
+        message: `Online order ${ticket.order_number} needs approval`,
+        description: `${ticket.customer_name} paid for ${ticket.item_count} item${
+          ticket.item_count === 1 ? "" : "s"
+        }. Check the receipt before it reaches the queue.`,
+        placement: "topRight",
+        duration: 0,
+      }),
+    );
+  }, [freshOnline, notification]);
 
   useEffect(() => {
     const channel = supabase
       .channel("admin-order-queue")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
         void queryClient.invalidateQueries({ queryKey: [orderQueueQueryKey] });
+        void queryClient.invalidateQueries({ queryKey: [onlineOrdersQueryKey] });
       })
       .subscribe((status) => setIsLive(status === "SUBSCRIBED"));
 
@@ -106,10 +122,15 @@ export const useQueueRealtimeHook = () => {
 
   const pendingCount = useMemo(
     () =>
-      (query.data ?? []).filter((ticket) => ticket.status === OrderStatusEnum.Pending)
-        .length,
-    [query.data],
+      (queueQuery.data ?? []).filter(
+        (ticket) => ticket.status === OrderStatusEnum.Pending,
+      ).length,
+    [queueQuery.data],
   );
 
-  return { isLive, pendingCount };
+  return {
+    isLive,
+    pendingCount,
+    onlineCount: onlineQuery.data?.length ?? 0,
+  };
 };

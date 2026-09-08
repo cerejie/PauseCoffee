@@ -47,8 +47,15 @@ export const useOrderStatusHook = (orderId: string | undefined) => {
 
   const order = query.data ?? null;
 
+  /// An online order that nobody has approved yet, and one that was refused.
+  /// Both sit outside the three-stage path below and must not be drawn on it.
+  const isAwaitingApproval = order?.status === OrderStatusEnum.AwaitingApproval;
+  const isRejected = order?.status === OrderStatusEnum.Rejected;
+  const isCancelled = order?.status === OrderStatusEnum.Cancelled;
+  const isRefused = isRejected || isCancelled;
+
   /// The three stages a customer cares about, with the timestamp each was
-  /// reached. Cancelled orders drop out of this entirely.
+  /// reached. Refused and unapproved orders drop out of this entirely.
   const steps = useMemo(() => {
     if (!order) return [];
 
@@ -68,10 +75,19 @@ export const useOrderStatusHook = (orderId: string | undefined) => {
     return order_.map((status, index) => ({
       status,
       at: reached[status],
-      done: currentIndex < 0 ? true : index < currentIndex,
+      // `currentIndex < 0` used to mean one thing — completed, so every stage
+      // is behind us. Three statuses now fall outside this list, and an order
+      // still waiting on a human must not render as a finished one: somebody
+      // who has just paid would be told their drink was ready.
+      done:
+        isAwaitingApproval || isRefused
+          ? false
+          : currentIndex < 0
+            ? true
+            : index < currentIndex,
       active: index === currentIndex,
     }));
-  }, [order]);
+  }, [order, isAwaitingApproval, isRefused]);
 
   return {
     order,
@@ -79,7 +95,13 @@ export const useOrderStatusHook = (orderId: string | undefined) => {
     isLoading: query.isLoading,
     isError: query.isError,
     refetch: query.refetch,
-    isCancelled: order?.status === OrderStatusEnum.Cancelled,
+    isCancelled,
+    isRejected,
+    isAwaitingApproval,
+    /// Either refusal — the tracker treats them the same way, but the words it
+    /// shows differ: cancelled happened to a real order, rejected means it was
+    /// never accepted in the first place.
+    isRefused,
     isDone: order?.status === OrderStatusEnum.Completed,
   };
 };

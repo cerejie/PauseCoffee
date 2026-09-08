@@ -1,4 +1,5 @@
 import {
+  CloudDownloadOutlined,
   CoffeeOutlined,
   HistoryOutlined,
   SettingOutlined,
@@ -8,6 +9,7 @@ import type { IRoute } from "../models/common/route.model";
 import { UserRoleEnum } from "../enums/role.enum";
 import MasterfileView from "../pages/Admin/MasterfileView";
 import OrderHistoryView from "../pages/Admin/OrderHistoryView";
+import OnlineOrdersView from "../pages/Admin/OnlineOrdersView";
 import OrderQueueView from "../pages/Admin/OrderQueueView";
 import SettingsView from "../pages/Admin/SettingsView";
 
@@ -21,6 +23,14 @@ export const adminViewRoutes: IRoute[] = [
     description: "Live tickets as they come in",
     icon: <UnorderedListOutlined />,
     Component: OrderQueueView,
+  },
+  {
+    key: "online",
+    path: "online",
+    label: "Online Orders",
+    description: "Paid online, waiting on your approval",
+    icon: <CloudDownloadOutlined />,
+    Component: OnlineOrdersView,
   },
   {
     key: "orders",

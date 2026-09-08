@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import BrandLoader from "../../components/common/loader/BrandLoader";
 import OrderProgress from "../../components/order/views/OrderProgress";
 import OrderReceipt from "../../components/order/views/OrderReceipt";
-import { OrderStatusEnum, orderTypeLabel } from "../../enums/order.enum";
+import { OrderStatusEnum, describeOrderType } from "../../enums/order.enum";
 import { useOrderStatusHook } from "../../hook/data/order/order.status.hook";
 import { formatTime } from "../../utils/formatter.utils";
 import {
@@ -26,7 +26,7 @@ import { pageHead, pageSubtitle, pageTitle } from "../../styles/layout/customer.
 const OrderTrackerView = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const { order, steps, isLoading, isError, refetch, isCancelled } =
+  const { order, steps, isLoading, isError, refetch, isRefused, isRejected, isCancelled, isAwaitingApproval } =
     useOrderStatusHook(orderId);
 
   if (isLoading) return <BrandLoader label="Finding your order" />;
@@ -51,16 +51,26 @@ const OrderTrackerView = () => {
       <div className={pageHead}>
         <div>
           <h1 className={pageTitle}>
-            {isCancelled
-              ? "This order was cancelled"
-              : order.status === OrderStatusEnum.Ready
-                ? "Your drink is ready"
-                : "Thanks, we're on it"}
+            {isRejected
+              ? "We couldn't accept this order"
+              : isCancelled
+                ? "This order was cancelled"
+                : isAwaitingApproval
+                  ? "Checking your payment"
+                  : order.status === OrderStatusEnum.Ready
+                    ? "Your drink is ready"
+                    : "Thanks, we're on it"}
           </h1>
           <p className={pageSubtitle}>
-            {isCancelled
-              ? order.cancel_reason ?? "Please talk to the counter for a refund or a redo."
-              : "Show this code at the counter when you collect."}
+            {isRejected
+              ? order.rejection_reason ??
+                "Please get in touch with the shop about a refund."
+              : isCancelled
+                ? order.cancel_reason ??
+                  "Please talk to the counter for a refund or a redo."
+                : isAwaitingApproval
+                  ? "We're confirming your payment now. Nothing is being made yet — we'll start the moment it clears."
+                  : "Show this code at the counter when you collect."}
           </p>
         </div>
       </div>
@@ -79,7 +89,9 @@ const OrderTrackerView = () => {
               </div>
               <div className={claimMetaItem}>
                 <span className={claimMetaLabel}>Type</span>
-                <span className={claimMetaValue}>{orderTypeLabel[order.order_type]}</span>
+                <span className={claimMetaValue}>
+                  {describeOrderType(order.order_type, order.order_channel)}
+                </span>
               </div>
               <div className={claimMetaItem}>
                 <span className={claimMetaLabel}>Items</span>
@@ -88,7 +100,7 @@ const OrderTrackerView = () => {
             </div>
           </div>
 
-          {!isCancelled && (
+          {!isRefused && !isAwaitingApproval && (
             <OrderProgress
               steps={steps}
               queuePosition={order.queue_position}
