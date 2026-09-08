@@ -3,6 +3,11 @@ import { Button, Form, Input, type FormInstance } from "antd";
 import L from "leaflet";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import {
+  davaoLatLngBounds,
+  maxZoom,
+  minZoom,
+} from "../../../constants/map.constants";
 import { useDeliveryLocationHook } from "../../../hook/data/online/delivery.location.hook";
 import type { IOnlineCheckoutFormRequest } from "../../../models/data/order/order.request";
 import {
@@ -13,7 +18,6 @@ import {
   pin as pinClass,
 } from "../../../styles/online/map.css";
 import { fieldLabel } from "../../../styles/cart/cart.css";
-import { sectionHint } from "../../../styles/online/online.css";
 
 /// A CSS pin instead of Leaflet's default marker image. Leaflet resolves its
 /// icon PNGs relative to the stylesheet, which breaks under a bundler — the
@@ -47,7 +51,11 @@ const RecenterOnJump = ({
     if (typeof lat !== "number" || typeof lng !== "number") return;
 
     const point = L.latLng(lat, lng);
-    if (!map.getBounds().contains(point)) map.setView(point, zoom);
+    // Either the pin left the viewport, or we are still showing the whole city
+    // and now have a real address to close in on.
+    if (!map.getBounds().contains(point) || map.getZoom() < zoom) {
+      map.flyTo(point, zoom, { duration: 0.7 });
+    }
   }, [lat, lng, zoom, map]);
 
   return null;
@@ -114,7 +122,17 @@ const DeliveryLocationField = ({ form }: DeliveryLocationFieldProps) => {
         <MapContainer
           center={[center.lat, center.lng]}
           zoom={zoom}
+          minZoom={minZoom}
+          maxZoom={maxZoom}
+          // The shop delivers inside Davao City, so the map is not a map of
+          // everywhere that happens to open there: it cannot be panned or
+          // zoomed out of the city at all. Viscosity 1 makes the edge solid
+          // rather than springy.
+          maxBounds={davaoLatLngBounds}
+          maxBoundsViscosity={1}
           scrollWheelZoom={false}
+          zoomAnimation
+          markerZoomAnimation
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
@@ -123,7 +141,8 @@ const DeliveryLocationField = ({ form }: DeliveryLocationFieldProps) => {
             // decoration — do not remove it.
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={19}
+            maxZoom={maxZoom}
+            bounds={davaoLatLngBounds}
           />
           <ClickToPin onPick={setPin} />
           <RecenterOnJump lat={lat} lng={lng} zoom={zoom} />
@@ -156,9 +175,7 @@ const DeliveryLocationField = ({ form }: DeliveryLocationFieldProps) => {
         {isNaming ? <span className={mapHint}>Looking up the address…</span> : null}
       </div>
 
-      <p className={mapHint}>
-        Tap the map or drag the pin to exactly where you want it delivered.
-      </p>
+      <p className={mapHint}>Tap the map or drag the pin. Davao City only.</p>
 
       {/* Hidden controls, but not hidden Form.Items — the required message has
           to render somewhere, and this is where a missing pin is explained. */}
@@ -205,9 +222,6 @@ const DeliveryLocationField = ({ form }: DeliveryLocationFieldProps) => {
             placeholder="e.g. blue gate beside the sari-sari store"
           />
         </Form.Item>
-        <p className={sectionHint} style={{ marginTop: 6, marginBottom: 0 }}>
-          This is usually what actually gets a rider to your door.
-        </p>
       </div>
     </div>
   );

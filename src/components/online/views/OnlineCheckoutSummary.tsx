@@ -13,6 +13,8 @@ import PaymentProofField from "../form/PaymentProofField";
 import PaymentQrPanel from "./PaymentQrPanel";
 import OrderTypePicker from "../../cart/views/OrderTypePicker";
 import { formatPeso } from "../../../utils/formatter.utils";
+import { staggerDelay } from "../../../utils/motion.utils";
+import { fade, rise } from "../../../styles/common/motion.css";
 import {
   fieldLabel,
   proceedButton,
@@ -87,12 +89,8 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
         scrollToFirstError
       >
         <div className={summaryBody}>
-          <section className={section}>
+          <section className={`${section} ${rise}`} style={staggerDelay(0)}>
             <h3 className={sectionTitle}>Who's this for?</h3>
-            <p className={sectionHint}>
-              We'll use your number if there's a problem with the order.
-            </p>
-
             <div className={fieldPair}>
               <div>
                 <label className={fieldLabel} htmlFor="customer_name">
@@ -137,12 +135,10 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
             </div>
           </section>
 
-          <section className={section}>
+          <section className={`${section} ${rise}`} style={staggerDelay(1)}>
             <h3 className={sectionTitle}>How do you want it?</h3>
             <p className={sectionHint}>
-              {isDelivery
-                ? "We'll bring it to the pin you drop below."
-                : "Collect it at the counter — we'll tell you when it's ready."}
+              {isDelivery ? "We bring it to your pin." : "Collect it at the counter."}
             </p>
 
             <Form.Item name="order_type" style={{ marginBottom: isDelivery ? 16 : 0 }}>
@@ -153,23 +149,21 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
             </Form.Item>
 
             {isDelivery ? (
-              <Suspense fallback={<Skeleton active paragraph={{ rows: 4 }} />}>
-                <DeliveryLocationField form={form} />
-              </Suspense>
+              <div className={fade}>
+                <Suspense fallback={<Skeleton active paragraph={{ rows: 4 }} />}>
+                  <DeliveryLocationField form={form} />
+                </Suspense>
+              </div>
             ) : null}
           </section>
 
-          <section className={section}>
+          <section className={`${section} ${rise}`} style={staggerDelay(2)}>
             <h3 className={sectionTitle}>How are you paying?</h3>
-            <p className={sectionHint}>
-              Pay first, then upload the receipt. We check every payment before
-              the order reaches the barista.
-            </p>
+            <p className={sectionHint}>Pay first, then upload your receipt.</p>
 
             {storefront.paymentOptions.length === 0 ? (
               <p className={sectionHint}>
-                The shop hasn't set up online payments yet. Please give them a
-                call instead.
+                Online payments aren't set up yet. Please call the shop.
               </p>
             ) : (
               <>
@@ -182,11 +176,13 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
                 </Form.Item>
 
                 {selectedOption ? (
-                  <PaymentQrPanel
-                    option={selectedOption}
-                    qrUrl={storefront.qrUrl}
-                    amount={subtotal}
-                  />
+                  <div className={fade}>
+                    <PaymentQrPanel
+                      option={selectedOption}
+                      qrUrl={storefront.qrUrl}
+                      amount={subtotal}
+                    />
+                  </div>
                 ) : null}
 
                 <div style={{ marginBottom: 14 }}>
@@ -219,7 +215,7 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
             )}
           </section>
 
-          <section className={section}>
+          <section className={`${section} ${rise}`} style={staggerDelay(3)}>
             <h3 className={sectionTitle}>Anything else?</h3>
             <Form.Item name="notes" style={{ marginBottom: 0 }}>
               <Input.TextArea
@@ -248,12 +244,9 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
           {storefront.contactPhone ? (
             <div className={contactCard}>
               <PhoneOutlined />
-              <span>
-                Questions before you pay?{" "}
-                <a href={`tel:${storefront.contactPhone}`} className={contactLink}>
-                  {storefront.contactPhone}
-                </a>
-              </span>
+              <a href={`tel:${storefront.contactPhone}`} className={contactLink}>
+                {storefront.contactPhone}
+              </a>
             </div>
           ) : null}
         </div>
@@ -265,10 +258,10 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
           </button>
           <p className={proceedHint}>
             {isShut
-              ? "The shop isn't taking online orders right now."
+              ? "Online ordering is closed."
               : proofPath
-                ? "We'll confirm your payment, then start making it. You can message us from the tracker."
-                : "Upload your payment receipt to place the order."}
+                ? "We'll confirm your payment, then start making it."
+                : "Upload your receipt to continue."}
           </p>
         </div>
       </Form>

@@ -2,6 +2,7 @@ import {
   CloudDownloadOutlined,
   CoffeeOutlined,
   HistoryOutlined,
+  MessageOutlined,
   SettingOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
@@ -9,6 +10,7 @@ import type { IRoute } from "../models/common/route.model";
 import { UserRoleEnum } from "../enums/role.enum";
 import MasterfileView from "../pages/Admin/MasterfileView";
 import OrderHistoryView from "../pages/Admin/OrderHistoryView";
+import MessagesView from "../pages/Admin/MessagesView";
 import OnlineOrdersView from "../pages/Admin/OnlineOrdersView";
 import OrderQueueView from "../pages/Admin/OrderQueueView";
 import SettingsView from "../pages/Admin/SettingsView";
@@ -31,6 +33,14 @@ export const adminViewRoutes: IRoute[] = [
     description: "Paid online, waiting on your approval",
     icon: <CloudDownloadOutlined />,
     Component: OnlineOrdersView,
+  },
+  {
+    key: "messages",
+    path: "messages",
+    label: "Messages",
+    description: "Conversations with online customers",
+    icon: <MessageOutlined />,
+    Component: MessagesView,
   },
   {
     key: "orders",

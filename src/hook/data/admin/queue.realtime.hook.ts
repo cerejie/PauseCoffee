@@ -2,10 +2,21 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { App } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OrderStatusEnum } from "../../../enums/order.enum";
-import { onlineOrdersQueryKey, orderQueueQueryKey } from "../../../keys/query.keys";
+import {
+  messageThreadsQueryKey,
+  onlineOrdersQueryKey,
+  orderMessagesQueryKey,
+  orderQueueQueryKey,
+} from "../../../keys/query.keys";
 import type { IOrderTicket } from "../../../models/data/order/order.response";
 import { orderServices } from "../../../services/data/order/order.services";
-import { newOrderChime, onlineOrderChime, playChime } from "../../../utils/chime.utils";
+import { messageServices } from "../../../services/data/order/message.services";
+import {
+  messageChime,
+  newOrderChime,
+  onlineOrderChime,
+  playChime,
+} from "../../../utils/chime.utils";
 import { supabase } from "../../../utils/supabase.utils";
 
 /// Announces only what arrived after the board came up.
@@ -64,6 +75,13 @@ export const useQueueRealtimeHook = () => {
     refetchInterval: 45_000,
   });
 
+  const threadsQuery = useQuery({
+    queryKey: [messageThreadsQueryKey],
+    queryFn: () => messageServices.getThreads(),
+    staleTime: 0,
+    refetchInterval: 60_000,
+  });
+
   const freshQueue = useFreshRows(queueQuery.data);
   const freshOnline = useFreshRows(onlineQuery.data);
 
@@ -105,6 +123,37 @@ export const useQueueRealtimeHook = () => {
     );
   }, [freshOnline, notification]);
 
+  const unreadCount = useMemo(
+    () =>
+      (threadsQuery.data ?? []).reduce(
+        (sum, thread) => sum + Number(thread.unread_count ?? 0),
+        0,
+      ),
+    [threadsQuery.data],
+  );
+
+  // Rising unread means somebody wrote something. Counted rather than compared
+  // by id, because a second message on a thread already in the list is still a
+  // customer waiting on an answer.
+  const lastUnread = useRef<number | null>(null);
+  useEffect(() => {
+    if (threadsQuery.data === undefined) return;
+
+    const previous = lastUnread.current;
+    lastUnread.current = unreadCount;
+
+    // First load is not news.
+    if (previous === null || unreadCount <= previous) return;
+
+    playChime(messageChime);
+    notification.info({
+      message: "New message from a customer",
+      description: `${unreadCount} unread message${unreadCount === 1 ? "" : "s"} waiting.`,
+      placement: "topRight",
+      duration: 6,
+    });
+  }, [unreadCount, threadsQuery.data, notification]);
+
   useEffect(() => {
     const channel = supabase
       .channel("admin-order-queue")
@@ -112,6 +161,23 @@ export const useQueueRealtimeHook = () => {
         void queryClient.invalidateQueries({ queryKey: [orderQueueQueryKey] });
         void queryClient.invalidateQueries({ queryKey: [onlineOrdersQueryKey] });
       })
+      // Same channel, second table. Staff hold a select policy on
+      // order_messages (0016), so postgres_changes reaches them here exactly
+      // as it does for orders — and a second channel would mean a second chime.
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "order_messages" },
+        (payload) => {
+          void queryClient.invalidateQueries({ queryKey: [messageThreadsQueryKey] });
+
+          const orderId = (payload.new as { order_id?: string } | null)?.order_id;
+          if (orderId) {
+            void queryClient.invalidateQueries({
+              queryKey: [orderMessagesQueryKey, orderId],
+            });
+          }
+        },
+      )
       .subscribe((status) => setIsLive(status === "SUBSCRIBED"));
 
     return () => {
@@ -132,5 +198,6 @@ export const useQueueRealtimeHook = () => {
     isLive,
     pendingCount,
     onlineCount: onlineQuery.data?.length ?? 0,
+    unreadCount,
   };
 };

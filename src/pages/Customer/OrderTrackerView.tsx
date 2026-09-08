@@ -2,6 +2,7 @@ import { CoffeeOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Result } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import BrandLoader from "../../components/common/loader/BrandLoader";
+import OrderChatPanel from "../../components/order/views/OrderChatPanel";
 import OrderProgress from "../../components/order/views/OrderProgress";
 import OrderReceipt from "../../components/order/views/OrderReceipt";
 import { OrderStatusEnum, describeOrderType } from "../../enums/order.enum";
@@ -107,6 +108,12 @@ const OrderTrackerView = () => {
               status={order.status}
             />
           )}
+
+          {/* chat_open is decided server-side by chat_is_open(): an approved
+              online order, still inside its retention window. */}
+          {order.chat_open ? (
+            <OrderChatPanel orderId={order.id} open={order.chat_open} />
+          ) : null}
 
           <div className={actions}>
             <button

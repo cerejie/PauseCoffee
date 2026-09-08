@@ -8,6 +8,8 @@ import EmptyState from "../../components/common/state/EmptyState";
 import { useOnlineOrdersHook } from "../../hook/data/admin/online.list.hook";
 import type { IOrderTicket } from "../../models/data/order/order.response";
 import { board } from "../../styles/admin/online.css";
+import { rise } from "../../styles/common/motion.css";
+import { staggerDelay } from "../../utils/motion.utils";
 
 /// Online orders waiting on a human. Nothing here has reached the barista: the
 /// place_order RPC parks an online order in `awaiting_approval`, which is not
@@ -56,8 +58,10 @@ const OnlineOrdersView = () => {
   return (
     <>
       <div className={board}>
-        {orders.map((order) => (
-          <OnlineOrderCard key={order.id} order={order} onReview={setReviewing} />
+        {orders.map((order, index) => (
+          <div key={order.id} className={rise} style={staggerDelay(index)}>
+            <OnlineOrderCard order={order} onReview={setReviewing} />
+          </div>
         ))}
       </div>
 

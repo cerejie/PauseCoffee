@@ -35,7 +35,7 @@ const AdminLayout = () => {
   const { profile, signOut } = useAdminAccountHook();
   // Mounted here, once, so the chime and the realtime channel exist exactly
   // once across every admin screen.
-  const { pendingCount, onlineCount, isLive } = useQueueRealtimeHook();
+  const { pendingCount, onlineCount, unreadCount, isLive } = useQueueRealtimeHook();
 
   // Masterfile is owner-only and Users is the superadmin's alone; the sider
   // must not advertise a route the screen behind it would turn away.
@@ -49,6 +49,7 @@ const AdminLayout = () => {
   const badgeFor = (key: string | undefined) => {
     if (key === "queue") return pendingCount > 0 ? pendingCount : null;
     if (key === "online") return onlineCount > 0 ? onlineCount : null;
+    if (key === "messages") return unreadCount > 0 ? unreadCount : null;
     return null;
   };
 

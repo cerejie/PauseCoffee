@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { OrderStatusEnum } from "../../../enums/order.enum";
-import { orderQueryKey } from "../../../keys/query.keys";
+import { orderMessagesQueryKey, orderQueryKey } from "../../../keys/query.keys";
 import { orderServices } from "../../../services/data/order/order.services";
 import { supabase } from "../../../utils/supabase.utils";
 
@@ -37,6 +37,15 @@ export const useOrderStatusHook = (orderId: string | undefined) => {
         // The payload is only a hint — re-read through the RPC, which is the
         // one path allowed to return this order's full detail.
         void queryClient.invalidateQueries({ queryKey: [orderQueryKey, orderId] });
+      })
+      // The chat trigger (0016) publishes to this same topic, so the reply
+      // arrives down the channel the tracker already holds. Its payload
+      // carries no message body either — the RPC stays the only path to the
+      // text — so this is another "read again".
+      .on("broadcast", { event: "message" }, () => {
+        void queryClient.invalidateQueries({
+          queryKey: [orderMessagesQueryKey, orderId],
+        });
       })
       .subscribe();
 

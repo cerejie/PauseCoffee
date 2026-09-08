@@ -1,12 +1,11 @@
 import { App } from "antd";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-/// Where the shop sits, used only as the map's opening view when the customer
-/// has not shared a location yet. Metro Manila — near enough that the first
-/// pan is short, and it is replaced the moment geolocation answers.
-export const defaultMapCenter = { lat: 14.5995, lng: 120.9842 } as const;
-export const defaultMapZoom = 13;
-export const pinnedMapZoom = 17;
+import {
+  cityZoom,
+  davaoCenter,
+  isInsideDavao,
+  pinnedZoom,
+} from "../../../constants/map.constants";
 
 /// Nominatim asks for no more than one request a second. This is comfortably
 /// inside that, and the lookup is a convenience anyway — the pin is what the
@@ -20,12 +19,11 @@ interface UseDeliveryLocationArgs {
   onChange: (next: { lat: number; lng: number; address?: string }) => void;
 }
 
-/// The map field's behaviour: locate me, drop a pin, and try to name the place
-/// the pin landed on.
+/// The map field's behaviour: find me, drop a pin, name the place it landed.
 ///
-/// The coordinates are authoritative. The address is a convenience that the
-/// customer may overwrite at will — a rider needs "blue gate beside the
-/// sari-sari store" far more than a formally correct street name.
+/// The coordinates are authoritative. The address is a convenience the customer
+/// may overwrite at will — a rider needs "blue gate beside the sari-sari store"
+/// far more than a formally correct street name.
 export const useDeliveryLocationHook = ({
   lat,
   lng,
@@ -77,8 +75,7 @@ export const useDeliveryLocationHook = ({
             onChange({ lat: nextLat, lng: nextLng, address: body.display_name });
           }
         } catch {
-          // Aborted, offline, or rate-limited. The pin is already set and the
-          // address box is the customer's to fill in either way.
+          // Aborted, offline, or rate-limited. The pin is set either way.
         } finally {
           setIsNaming(false);
         }
@@ -89,42 +86,73 @@ export const useDeliveryLocationHook = ({
 
   const setPin = useCallback(
     (nextLat: number, nextLng: number) => {
+      // The map cannot be panned or clicked outside the city, so this only
+      // catches a coordinate arriving from somewhere else — geolocation, or a
+      // restored form value.
+      if (!isInsideDavao(nextLat, nextLng)) {
+        message.info("We only deliver within Davao City.");
+        return;
+      }
+
       onChange({ lat: nextLat, lng: nextLng });
       nameLocation(nextLat, nextLng);
     },
-    [onChange, nameLocation],
+    [onChange, nameLocation, message],
   );
 
-  const locateMe = useCallback(() => {
-    if (!navigator.geolocation) {
-      message.info("This browser can't share your location. Drop the pin instead.");
-      return;
-    }
+  const locate = useCallback(
+    (announce: boolean) => {
+      if (!navigator.geolocation) {
+        if (announce) message.info("Drop the pin on your address instead.");
+        return;
+      }
 
-    setIsLocating(true);
+      setIsLocating(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setIsLocating(false);
-        setPin(position.coords.latitude, position.coords.longitude);
-      },
-      () => {
-        setIsLocating(false);
-        // Denied, unavailable, or timed out — all the same to the customer,
-        // and all recoverable by dragging the pin.
-        message.info("We couldn't get your location. Drag the pin to your address.");
-      },
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
-    );
-  }, [message, setPin]);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setIsLocating(false);
+          setPin(position.coords.latitude, position.coords.longitude);
+        },
+        () => {
+          setIsLocating(false);
+          // Denied, unavailable or timed out — all the same to the customer,
+          // and all recoverable by dragging the pin. Silent when the attempt
+          // was ours rather than theirs: nobody asked, so nobody is told off.
+          if (announce) message.info("Drag the pin to your address.");
+        },
+        { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+      );
+    },
+    [message, setPin],
+  );
+
+  const locateMe = useCallback(() => locate(true), [locate]);
+
+  // One silent attempt as the field opens, so the common case — ordering from
+  // the place you want it delivered — is already pinned and zoomed in by the
+  // time the customer looks at the map.
+  const autoLocated = useRef(false);
+  useEffect(() => {
+    if (autoLocated.current) return;
+    autoLocated.current = true;
+
+    if (typeof lat === "number" && typeof lng === "number") return;
+    locate(false);
+    // Deliberately once, on mount: re-running when the pin moves would fight
+    // the customer for control of their own map.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const hasPin = typeof lat === "number" && typeof lng === "number";
 
   return {
-    hasPin: typeof lat === "number" && typeof lng === "number",
+    hasPin,
     center: {
-      lat: typeof lat === "number" ? lat : defaultMapCenter.lat,
-      lng: typeof lng === "number" ? lng : defaultMapCenter.lng,
+      lat: hasPin ? (lat as number) : davaoCenter.lat,
+      lng: hasPin ? (lng as number) : davaoCenter.lng,
     },
-    zoom: typeof lat === "number" ? pinnedMapZoom : defaultMapZoom,
+    zoom: hasPin ? pinnedZoom : cityZoom,
     isLocating,
     isNaming,
     setPin,
