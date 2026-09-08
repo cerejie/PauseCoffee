@@ -3,9 +3,9 @@ import { App } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OrderStatusEnum } from "../../../enums/order.enum";
 import {
+  customerMessagesQueryKey,
   messageThreadsQueryKey,
   onlineOrdersQueryKey,
-  orderMessagesQueryKey,
   orderQueueQueryKey,
 } from "../../../keys/query.keys";
 import type { IOrderTicket } from "../../../models/data/order/order.response";
@@ -167,15 +167,15 @@ export const useQueueRealtimeHook = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "order_messages" },
-        (payload) => {
+        () => {
           void queryClient.invalidateQueries({ queryKey: [messageThreadsQueryKey] });
-
-          const orderId = (payload.new as { order_id?: string } | null)?.order_id;
-          if (orderId) {
-            void queryClient.invalidateQueries({
-              queryKey: [orderMessagesQueryKey, orderId],
-            });
-          }
+          // Conversations are keyed by customer, and the payload names an
+          // order. Rather than map one to the other from a row that may
+          // predate the open thread, every open conversation re-reads — there
+          // is at most one on screen.
+          void queryClient.invalidateQueries({
+            queryKey: [customerMessagesQueryKey],
+          });
         },
       )
       .subscribe((status) => setIsLive(status === "SUBSCRIBED"));

@@ -47,3 +47,15 @@ export const slugify = (value: string): string =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
+
+/// One or two letters for a monogram. Falls back to a bullet rather than an
+/// empty circle, because a name is only ever missing when something upstream
+/// went wrong and a blank avatar hides that.
+export const initialsOf = (value: string | null | undefined): string => {
+  const words = (value ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "•";
+
+  const first = words[0][0];
+  const last = words.length > 1 ? words[words.length - 1][0] : "";
+  return `${first}${last}`.toUpperCase();
+};

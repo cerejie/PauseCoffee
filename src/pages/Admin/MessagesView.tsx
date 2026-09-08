@@ -1,41 +1,35 @@
 import { MessageOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 import { useState } from "react";
-import OrderChatDrawer from "../../components/admin/messages/OrderChatDrawer";
+import ConversationList from "../../components/admin/messages/ConversationList";
+import ConversationPane from "../../components/admin/messages/ConversationPane";
 import BrandLoader from "../../components/common/loader/BrandLoader";
 import EmptyState from "../../components/common/state/EmptyState";
-import { MessageSenderEnum } from "../../enums/order.enum";
 import { useMessageInboxHook } from "../../hook/data/admin/message.inbox.hook";
-import type { IMessageThread } from "../../models/data/order/message.response";
 import { rise } from "../../styles/common/motion.css";
-import { staggerDelay } from "../../utils/motion.utils";
-import { formatElapsed } from "../../utils/formatter.utils";
 import {
-  list,
-  threadBody,
-  threadCode,
-  threadHead,
-  threadName,
-  threadPreview,
-  threadPreviewUnread,
-  threadRow,
-  threadRowUnread,
-  threadTime,
-  unreadCount,
+  hiddenOnPhone,
+  messenger,
+  pane,
+  paneEmpty,
+  sidebar,
 } from "../../styles/admin/messages.css";
 
-/// Every conversation with a customer. Unanswered ones sit at the top — without
-/// this screen a message on an already-completed order has nowhere to appear
-/// and would simply be missed.
+/// Every conversation with a customer, one row per person. Unanswered ones sit
+/// at the top — without this screen a message on an already-completed order has
+/// nowhere to appear and would simply be missed.
+///
+/// Two panes rather than a list and a drawer: a reply is written while still
+/// scanning who else is waiting, and a drawer covers exactly that. On a phone
+/// there is only room for one of them, so the list steps aside.
 const MessagesView = () => {
   const { threads, isLoading, isError, refetch } = useMessageInboxHook();
-  const [active, setActive] = useState<IMessageThread | null>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
 
   // Taken from the live list rather than frozen at open, so a reply sent from
-  // another device does not leave a stale header in this one.
-  const current = active
-    ? threads.find((thread) => thread.order_id === active.order_id) ?? active
-    : null;
+  // another device does not leave a stale header in this one — and a thread
+  // that has been purged falls back to the empty pane instead of persisting.
+  const current = threads.find((thread) => thread.customer_key === activeKey) ?? null;
 
   if (isLoading) return <BrandLoader label="Loading conversations" />;
 
@@ -65,49 +59,35 @@ const MessagesView = () => {
   }
 
   return (
-    <>
-      <div className={list}>
-        {threads.map((thread, index) => {
-          const unread = Number(thread.unread_count ?? 0);
-          const fromCustomer =
-            thread.last_message_sender === MessageSenderEnum.Customer;
+    <div className={`${messenger} ${rise}`}>
+      <aside className={`${sidebar} ${current ? hiddenOnPhone : ""}`}>
+        <ConversationList
+          threads={threads}
+          activeKey={current?.customer_key ?? null}
+          onSelect={(thread) => setActiveKey(thread.customer_key)}
+        />
+      </aside>
 
-          return (
-            <button
-              key={thread.order_id}
-              type="button"
-              className={`${threadRow} ${unread ? threadRowUnread : ""} ${rise}`}
-              style={staggerDelay(index)}
-              onClick={() => setActive(thread)}
-            >
-              <div className={threadBody}>
-                <div className={threadHead}>
-                  <span className={threadCode}>{thread.order_number}</span>
-                  <span className={threadName}>{thread.customer_name}</span>
-                  <span className={threadTime}>
-                    {formatElapsed(thread.last_message_at)}
-                  </span>
-                </div>
-                <p
-                  className={`${threadPreview} ${unread ? threadPreviewUnread : ""}`}
-                >
-                  {fromCustomer ? "" : "You: "}
-                  {thread.last_message_body ?? ""}
-                </p>
-              </div>
-
-              {unread > 0 ? <span className={unreadCount}>{unread}</span> : null}
-            </button>
-          );
-        })}
-      </div>
-
-      <OrderChatDrawer
-        thread={current}
-        open={Boolean(active)}
-        onClose={() => setActive(null)}
-      />
-    </>
+      <section className={`${pane} ${current ? "" : hiddenOnPhone}`}>
+        {current ? (
+          <ConversationPane
+            // Remounted per customer so the composer's draft and the thread's
+            // scroll position belong to the conversation on screen.
+            key={current.customer_key}
+            thread={current}
+            onBack={() => setActiveKey(null)}
+          />
+        ) : (
+          <div className={paneEmpty}>
+            <EmptyState
+              icon={<MessageOutlined />}
+              title="Pick a conversation"
+              description="Choose someone on the left to read and reply."
+            />
+          </div>
+        )}
+      </section>
+    </div>
   );
 };
 

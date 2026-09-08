@@ -233,3 +233,31 @@ export const unreadPip = style({
   display: "grid",
   placeItems: "center",
 });
+
+// ------------------------------------------------------------ order rules
+
+/// A conversation now spans orders on both sides, so a run of messages says
+/// which one it belonged to. Squarer and quieter than daySplit deliberately:
+/// two pills of equal weight between the same two bubbles would read as one
+/// broken divider rather than two facts.
+export const orderSplit = style({
+  alignSelf: "center",
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  width: "100%",
+  margin: "10px 0 2px",
+  color: colorTextMuted,
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  selectors: {
+    "&::before, &::after": {
+      content: '""',
+      flex: 1,
+      height: 1,
+      backgroundColor: colorBorderSoft,
+    },
+  },
+});

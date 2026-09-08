@@ -7,6 +7,7 @@ import { bubble } from "../../../styles/common/motion.css";
 import {
   author,
   daySplit,
+  orderSplit,
   empty,
   message as messageClass,
   messageMine,
@@ -28,6 +29,11 @@ interface ChatThreadProps {
   /// them every reply is from the shop — so this is where that is decided.
   themLabel: string;
   emptyLabel: string;
+  /// Message id → the rule to draw above it. Both sides of the conversation
+  /// span several orders now, and a run of messages needs to say which one it
+  /// belonged to. Which message starts a run is the caller's to work out —
+  /// only it knows what the messages are grouped by.
+  sections?: ReadonlyMap<string, string>;
   /// A message is in flight; the dots stand in for it until the server agrees.
   sending?: boolean;
   height?: number | string;
@@ -48,6 +54,7 @@ const ChatThread = ({
   viewer,
   themLabel,
   emptyLabel,
+  sections,
   sending,
   height = 320,
 }: ChatThreadProps) => {
@@ -80,12 +87,15 @@ const ChatThread = ({
         // One name per run of messages: a back-and-forth should not repeat
         // "PAUSE COFFEE" above every line.
         const newSpeaker = !previous || previous.sender !== entry.sender;
+        const section = sections?.get(entry.id);
 
         return (
           <div key={entry.id} style={{ display: "contents" }}>
             {newDay ? (
               <span className={daySplit}>{dayLabel(entry.created_at)}</span>
             ) : null}
+
+            {section ? <span className={orderSplit}>{section}</span> : null}
 
             <div
               className={`${row} ${mine ? rowMine : rowTheirs} ${bubble}`}

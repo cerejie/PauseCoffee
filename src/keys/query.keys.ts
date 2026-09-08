@@ -14,7 +14,10 @@ export const adminSizesQueryKey = "admin-sizes";
 export const adminCategoryAddonsQueryKey = "admin-category-addons";
 export const adminUsersQueryKey = "admin-users";
 export const onlineOrdersQueryKey = "online-orders";
-export const orderMessagesQueryKey = "order-messages";
 export const messageThreadsQueryKey = "message-threads";
+/// The customer's whole conversation, keyed by the device that holds it, and
+/// the staff view of one customer's — the two groupings of the same rows.
+export const deviceMessagesQueryKey = "device-messages";
+export const customerMessagesQueryKey = "customer-messages";
 export const appSettingsQueryKey = "app-settings";
 export const onlineOrderingOpenQueryKey = "online-ordering-open";

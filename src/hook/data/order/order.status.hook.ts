@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { OrderStatusEnum } from "../../../enums/order.enum";
-import { orderMessagesQueryKey, orderQueryKey } from "../../../keys/query.keys";
+import { deviceMessagesQueryKey, orderQueryKey } from "../../../keys/query.keys";
 import { orderServices } from "../../../services/data/order/order.services";
 import { supabase } from "../../../utils/supabase.utils";
 
@@ -43,8 +43,10 @@ export const useOrderStatusHook = (orderId: string | undefined) => {
       // carries no message body either — the RPC stays the only path to the
       // text — so this is another "read again".
       .on("broadcast", { event: "message" }, () => {
+        // The conversation is the device's, not this order's, so the whole
+        // thread is re-read rather than one ticket's slice of it.
         void queryClient.invalidateQueries({
-          queryKey: [orderMessagesQueryKey, orderId],
+          queryKey: [deviceMessagesQueryKey],
         });
       })
       .subscribe();

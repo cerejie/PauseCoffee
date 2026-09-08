@@ -3,12 +3,13 @@ import { useMemo } from "react";
 import { messageThreadsQueryKey } from "../../../keys/query.keys";
 import { messageServices } from "../../../services/data/order/message.services";
 
-/// Every conversation, newest first, aggregated by the order_message_threads
+/// Every conversation, newest first, aggregated by the customer_message_threads
 /// view so this is one round trip however many are open.
 ///
-/// The inbox is what makes the feature reliable rather than merely present: a
-/// message on an order the barista finished an hour ago has nowhere else to
-/// show up, and would otherwise simply be missed.
+/// One row is one customer, not one order — a person who ordered twice is one
+/// conversation to answer. The inbox is also what makes the feature reliable
+/// rather than merely present: a message on an order the barista finished an
+/// hour ago has nowhere else to show up, and would otherwise simply be missed.
 export const useMessageInboxHook = () => {
   const query = useQuery({
     queryKey: [messageThreadsQueryKey],

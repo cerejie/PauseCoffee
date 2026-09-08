@@ -8,6 +8,7 @@ import type {
 } from "../../../models/data/order/order.request";
 import { orderServices } from "../../../services/data/order/order.services";
 import { useOrderStore } from "../../../store/data/order/order.store";
+import { getDeviceId } from "../../../utils/device.utils";
 import { supabaseError } from "../../../utils/supabase.utils";
 import { useCartHook } from "../cart/cart.hook";
 import { useStorefrontSettingsHook } from "../settings/settings.hook";
@@ -38,6 +39,9 @@ export const useOnlineOrderFormHook = () => {
         customer_name: values.customer_name.trim(),
         order_type: values.order_type,
         notes: values.notes?.trim() || null,
+        // What lets this phone reopen the thread after a refresh, and keep the
+        // last order's conversation when the next one starts.
+        device_id: getDeviceId(),
         contact_phone: values.contact_phone.trim(),
         payment_method: values.payment_method,
         payment_reference: values.payment_reference?.trim() || null,

@@ -8,6 +8,7 @@ import type {
 } from "../../../models/data/order/order.request";
 import { orderServices } from "../../../services/data/order/order.services";
 import { useOrderStore } from "../../../store/data/order/order.store";
+import { getDeviceId } from "../../../utils/device.utils";
 import { supabaseError } from "../../../utils/supabase.utils";
 import { useCartHook } from "../cart/cart.hook";
 
@@ -27,6 +28,7 @@ export const useOrderFormHook = () => {
         customer_name: values.customer_name.trim(),
         order_type: values.order_type,
         notes: values.notes?.trim() || null,
+        device_id: getDeviceId(),
         items: lines.map((line) => ({
           size_id: line.sizeId,
           quantity: line.quantity,

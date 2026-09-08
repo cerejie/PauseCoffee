@@ -7,3 +7,9 @@ export const lastOrderStorageKey = "pause.last-order";
 /// refresh mid-checkout so a dropped connection does not cost them the upload —
 /// and an abandoned one is swept from the bucket by migration 0017.
 export const pendingProofStorageKey = "pause.pending-proof";
+
+/// The random uuid this browser is known by. Not a hardware identifier — no
+/// web API exposes one — just a name the app mints for itself so a phone can
+/// reopen its own conversation after a refresh, or after the order it started
+/// on has been collected.
+export const deviceStorageKey = "pause.device";

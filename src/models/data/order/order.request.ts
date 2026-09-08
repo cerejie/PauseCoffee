@@ -21,6 +21,10 @@ export interface IPlaceOrderRequest {
   order_type: OrderTypeEnum;
   notes?: string | null;
   items: IPlaceOrderLine[];
+  /// The uuid this browser knows itself by, so the phone that placed the order
+  /// can reopen the conversation on it after a refresh. Minted client-side by
+  /// getDeviceId(); it identifies a browser, never a person or a device.
+  device_id?: string;
 
   /// Omitted entirely by the in-store app, which defaults to `in_store`
   /// server-side. Everything below is read only when this says `online`.
@@ -77,7 +81,3 @@ export interface IReviewOnlineOrderRequest {
   reason?: string;
 }
 
-export interface ISendOrderMessageRequest {
-  orderId: string;
-  body: string;
-}

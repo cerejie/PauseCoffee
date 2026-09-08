@@ -12,6 +12,8 @@ import {
 } from "../../../styles/common/chat.css";
 
 interface OrderChatPanelProps {
+  /// The order the tracker is showing. Not what the conversation is keyed on —
+  /// that is the device — but what gets adopted into it on first open.
   orderId: string;
   /// Computed by the database (chat_is_open), not here. The RPCs enforce the
   /// same predicate, so a composer shown when this is false would only produce
@@ -22,8 +24,12 @@ interface OrderChatPanelProps {
 /// The customer's line to the shop, on their tracker. Only ever rendered for an
 /// approved online order — which is the point of the approval gate: somebody
 /// who submits a junk order gets no channel to the counter.
+///
+/// What it shows is the whole conversation this phone has had with the shop,
+/// not this ticket's slice of it: a refresh, or a second order, must not read
+/// as starting again from nothing.
 const OrderChatPanel = ({ orderId, open }: OrderChatPanelProps) => {
-  const { messages, isSending, send } = useOrderChatHook(orderId, open);
+  const { messages, sections, isSending, send } = useOrderChatHook(orderId, open);
 
   if (!open) return null;
 
@@ -40,6 +46,7 @@ const OrderChatPanel = ({ orderId, open }: OrderChatPanelProps) => {
         viewer={MessageSenderEnum.Customer}
         themLabel="Pause Coffee"
         emptyLabel="Anything we should know? Send it here."
+        sections={sections}
         sending={isSending}
         height={280}
       />
