@@ -53,6 +53,15 @@ export const brandMark = style({
   textDecoration: "none",
 });
 
+// The lockup carries its own row so the wordmark sits beside the roundel even
+// where the caller wraps BrandMark in chrome of its own (the admin sider, the
+// login pane) rather than passing a layout class down.
+export const brandLockup = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 10,
+});
+
 export const brandRoundel = style({
   width: 34,
   height: 34,

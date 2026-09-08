@@ -228,8 +228,12 @@ export const grid = style({
   gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
   gap: 12,
   "@media": {
+    // Two up on a phone. The card turns portrait at the same breakpoint, so a
+    // full-width row was spending the whole fold on three products.
     "screen and (max-width: 640px)": {
-      gridTemplateColumns: "1fr",
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      columnGap: 11,
+      rowGap: 14,
     },
   },
 });
@@ -269,6 +273,18 @@ export const card = style({
       borderColor: colorBorder,
     },
     "&:hover::before": { opacity: 1 },
+    "&:active": { transform: "scale(.98)" },
+  },
+  WebkitTapHighlightColor: "transparent",
+  "@media": {
+    // Portrait at half a phone width: the photo takes the full card width and
+    // the body sits under it, so the name still has a line to itself.
+    "screen and (max-width: 640px)": {
+      flexDirection: "column",
+      gap: 0,
+      padding: 0,
+      boxShadow: shadowSoft,
+    },
   },
 });
 
@@ -280,6 +296,12 @@ export const cardBody = style({
   alignItems: "flex-start",
   gap: 5,
   padding: "5px 4px 3px 0",
+  "@media": {
+    "screen and (max-width: 640px)": {
+      gap: 3,
+      padding: "9px 11px 11px",
+    },
+  },
 });
 
 /// Above the name rather than beside it: "BEST SELLER" is the first thing worth
@@ -295,6 +317,24 @@ export const cardBadge = style({
   color: accentInk,
   backgroundColor: accentSoft,
   marginBottom: 1,
+  "@media": {
+    // The accent tint is 14% alpha — legible on the card, not over a photo —
+    // so on the portrait card the badge rides the picture on its own veil.
+    "screen and (max-width: 640px)": {
+      position: "absolute",
+      top: 8,
+      left: 8,
+      zIndex: 1,
+      marginBottom: 0,
+      fontSize: 8.5,
+      padding: "3px 7px",
+      color: colorTextHeading,
+      backgroundColor: colorSurfaceVeil,
+      backdropFilter: "blur(6px)",
+      WebkitBackdropFilter: "blur(6px)",
+      boxShadow: shadowSoft,
+    },
+  },
 });
 
 export const cardTitle = style({
@@ -305,6 +345,15 @@ export const cardTitle = style({
   color: colorTextHeading,
   lineHeight: 1.3,
   margin: 0,
+  "@media": {
+    "screen and (max-width: 640px)": {
+      fontSize: 13.5,
+      display: "-webkit-box",
+      WebkitLineClamp: 2,
+      WebkitBoxOrient: "vertical",
+      overflow: "hidden",
+    },
+  },
 });
 
 export const cardDescription = style({
@@ -315,6 +364,13 @@ export const cardDescription = style({
   WebkitLineClamp: 2,
   WebkitBoxOrient: "vertical",
   overflow: "hidden",
+  "@media": {
+    "screen and (max-width: 640px)": {
+      fontSize: 11.5,
+      lineHeight: 1.45,
+      WebkitLineClamp: 1,
+    },
+  },
 });
 
 /// The customer card prices from one line now — "12 oz  P210", or "from" when
@@ -346,6 +402,13 @@ export const cardFoot = style({
   alignItems: "flex-end",
   justifyContent: "space-between",
   gap: 10,
+  "@media": {
+    "screen and (max-width: 640px)": {
+      alignItems: "center",
+      paddingTop: 9,
+      gap: 8,
+    },
+  },
 });
 
 export const cardPriceBlock = style({
@@ -361,6 +424,9 @@ export const cardPriceLabel = style({
   textTransform: "uppercase",
   color: colorTextMuted,
   lineHeight: 1,
+  "@media": {
+    "screen and (max-width: 640px)": { fontSize: 9.5, letterSpacing: "0.08em" },
+  },
 });
 
 export const cardPrice = style({
@@ -369,6 +435,9 @@ export const cardPrice = style({
   fontWeight: 700,
   color: colorTextHeading,
   lineHeight: 1.1,
+  "@media": {
+    "screen and (max-width: 640px)": { fontSize: 15 },
+  },
 });
 
 export const cardAdd = style({
@@ -385,6 +454,10 @@ export const cardAdd = style({
   transition: "transform .18s ease",
   selectors: {
     [`${card}:hover &`]: { transform: "scale(1.08)" },
+    [`${card}:active &`]: { transform: "scale(.94)" },
+  },
+  "@media": {
+    "screen and (max-width: 640px)": { width: 31, height: 31, fontSize: 13 },
   },
 });
 

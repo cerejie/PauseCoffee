@@ -29,6 +29,37 @@ export const drawerRoot = style({
   backgroundColor: colorSurface,
 });
 
+/// Everything above the scrolling options answers to the drag: the grip, the
+/// photo and the title block. The options themselves must not, or a flick
+/// through the add-ons would throw the sheet off the bottom of the screen.
+export const sheetGrab = style({
+  position: "relative",
+  flexShrink: 0,
+  touchAction: "none",
+  "@media": {
+    // Desktop opens this from the right — there is nothing to swipe down.
+    "screen and (min-width: 768px)": { touchAction: "auto" },
+  },
+});
+
+/// The handle. Its only job is to say the sheet can be pulled, so it sits on
+/// its own veil to stay visible over a dark photo or a pale header alike.
+export const sheetGrip = style({
+  position: "absolute",
+  zIndex: 3,
+  top: 9,
+  left: "50%",
+  transform: "translateX(-50%)",
+  width: 40,
+  height: 4,
+  borderRadius: radiusPill,
+  backgroundColor: "rgba(255,255,255,0.82)",
+  boxShadow: "0 1px 4px rgba(51,32,15,0.28)",
+  "@media": {
+    "screen and (min-width: 768px)": { display: "none" },
+  },
+});
+
 export const head = style({
   position: "relative",
   padding: "26px 22px 20px",

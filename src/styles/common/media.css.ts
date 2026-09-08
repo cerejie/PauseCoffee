@@ -28,6 +28,33 @@ export const mediaImage = style({
   objectFit: "cover",
 });
 
+/// The whole product, letterboxed inside the frame instead of cropped to it —
+/// a cup shot tall enough to lose its lid and its base to `cover`.
+export const mediaImageContain = style([
+  mediaImage,
+  {
+    position: "relative",
+    zIndex: 1,
+    objectFit: "contain",
+    boxSizing: "border-box",
+    padding: "14px 16px 12px",
+    filter: "drop-shadow(0 10px 20px rgba(51, 32, 15, 0.24))",
+  },
+]);
+
+/// …and the same photo behind it, blown past the edges and blurred out, so the
+/// band still reads as full-bleed colour rather than as a letterboxed slab.
+export const mediaBackdrop = style({
+  position: "absolute",
+  inset: 0,
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  transform: "scale(1.4)",
+  filter: "blur(26px) saturate(150%)",
+  opacity: 0.6,
+});
+
 /// Only ever seen on rows seeded before photography — the form requires a
 /// picture, so nothing saved from the admin screen can land here.
 export const mediaFallback = style({
@@ -50,6 +77,17 @@ export const mediaCard = style({
   minHeight: 112,
   borderRadius: radiusMd,
   fontSize: 22,
+  "@media": {
+    // The card is portrait on a phone, so the picture is the card's lid: full
+    // width, square, and squared off — the card's own radius clips the corners.
+    "screen and (max-width: 640px)": {
+      width: "100%",
+      minHeight: 0,
+      aspectRatio: "1 / 1",
+      borderRadius: 0,
+      fontSize: 26,
+    },
+  },
 });
 
 export const mediaLine = style({
@@ -61,11 +99,13 @@ export const mediaLine = style({
 
 export const mediaHero = style({
   width: "100%",
-  height: 190,
+  height: 212,
   borderRadius: 0,
   fontSize: 30,
   "@media": {
-    "screen and (max-width: 640px)": { height: 150 },
+    // Tall enough that a contained cup still reads as the subject, short enough
+    // that size and sweetness stay above the fold on the sheet below it.
+    "screen and (max-width: 640px)": { height: 176 },
   },
 });
 

@@ -88,3 +88,25 @@ The seed in `0004_seed_menu.sql` is transcribed from the printed menus in
 `Menu/` (Coffee, Matcha, MilkBased). If a price changes, change it there **and**
 in the shop's admin screen — the migration is idempotent and re-running it
 resets prices to whatever the file says.
+
+## Commits
+
+After **every** change, propose a commit title and message — even when the user
+has not asked to commit. Proposing is the job; running `git commit` still waits
+for the user to ask.
+
+Title is one line, `Prefix: subject`. Prefixes: `Feature`, `BugFix`, `ReDesign`,
+`Migration`, `Refactor`, `Chore`. A change that spans two joins them with `&`.
+
+The description is a summary and nothing more — bullets only, **8 words maximum
+per bullet**, one bullet per thing that changed. No prose, no rationale, no
+file lists.
+
+```
+BugFix & ReDesign: Product card and options drawer
+
+- Menu grid now two columns on mobile
+- Product card turns portrait below 640px
+- Options hero shows whole drink, uncropped
+- Bottom sheet closes on swipe down
+```

@@ -1,6 +1,7 @@
 import {
   brandBar,
   brandBars,
+  brandLockup,
   brandRoundel,
   brandStack,
   brandSub,
@@ -25,7 +26,7 @@ const BrandMark = ({ markOnly, tone = "dark", className }: BrandMarkProps) => {
   const light = tone === "light";
 
   return (
-    <span className={className}>
+    <span className={className ? `${brandLockup} ${className}` : brandLockup}>
       <span className={brandRoundel}>
         <span className={brandBars}>
           <span className={brandBar} />

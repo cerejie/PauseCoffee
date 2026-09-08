@@ -3,6 +3,7 @@ import { Drawer, Grid } from "antd";
 import ProductImage from "../../common/media/ProductImage";
 import { useAccentVars } from "../../../hook/common/accent.hook";
 import { useBrandVars } from "../../../hook/common/brand.hook";
+import { useSheetSwipeHook } from "../../../hook/common/sheet.swipe.hook";
 import type { useProductOptionsHook } from "../../../hook/data/menu/product.options.hook";
 import ProductOptionsBody from "./ProductOptionsBody";
 import ProductOptionsFooter from "./ProductOptionsFooter";
@@ -13,6 +14,8 @@ import {
   headBadge,
   headDescription,
   headTitle,
+  sheetGrab,
+  sheetGrip,
 } from "../../../styles/menu/options.drawer.css";
 import { mediaHero } from "../../../styles/common/media.css";
 
@@ -29,6 +32,7 @@ const ProductOptionsDrawer = ({ options }: ProductOptionsDrawerProps) => {
 
   const { visible, product, section, close, editing } = options;
   const isDesktop = Boolean(screens.md);
+  const { anchorRef, swipeHandlers } = useSheetSwipeHook(close, !isDesktop);
 
   return (
     <Drawer
@@ -38,6 +42,7 @@ const ProductOptionsDrawer = ({ options }: ProductOptionsDrawerProps) => {
       width={isDesktop ? 460 : undefined}
       height={isDesktop ? undefined : "88dvh"}
       closable={false}
+      maskClosable
       destroyOnHidden
       styles={{
         body: { padding: 0 },
@@ -55,27 +60,32 @@ const ProductOptionsDrawer = ({ options }: ProductOptionsDrawerProps) => {
           <CloseOutlined />
         </button>
 
-        {/* Skipped, not shown as a placeholder: an item still waiting on its
-            photo should not open onto a blank slab the height of a hero. */}
-        {product?.image_url ? (
-          <ProductImage
-            src={product.image_url}
-            alt={product.name}
-            className={mediaHero}
-          />
-        ) : null}
+        <div ref={anchorRef} className={sheetGrab} {...swipeHandlers}>
+          <span className={sheetGrip} aria-hidden="true" />
 
-        <div className={head}>
-          {section ? (
-            <span className={headBadge}>
-              {editing ? "Editing · " : ""}
-              {section.name}
-            </span>
+          {/* Skipped, not shown as a placeholder: an item still waiting on its
+              photo should not open onto a blank slab the height of a hero. */}
+          {product?.image_url ? (
+            <ProductImage
+              src={product.image_url}
+              alt={product.name}
+              className={mediaHero}
+              fit="contain"
+            />
           ) : null}
-          <h2 className={headTitle}>{product?.name}</h2>
-          {product?.description ? (
-            <p className={headDescription}>{product.description}</p>
-          ) : null}
+
+          <div className={head}>
+            {section ? (
+              <span className={headBadge}>
+                {editing ? "Editing · " : ""}
+                {section.name}
+              </span>
+            ) : null}
+            <h2 className={headTitle}>{product?.name}</h2>
+            {product?.description ? (
+              <p className={headDescription}>{product.description}</p>
+            ) : null}
+          </div>
         </div>
 
         <ProductOptionsBody options={options} />
