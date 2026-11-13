@@ -9,8 +9,10 @@ import type {
   IProductSize,
 } from "../../../models/data/menu/menu.response";
 import { useOptionsStore } from "../../../store/data/cart/options.store";
+import { discountedPrice } from "../../../utils/discount.utils";
 import { formatPeso } from "../../../utils/formatter.utils";
 import { useCartHook } from "../cart/cart.hook";
+import { useStorefrontDiscountHook } from "../settings/settings.hook";
 import { useModal } from "../../common/modal.hook";
 
 export interface IProductOptionsPayload {
@@ -28,6 +30,7 @@ export const useProductOptionsHook = () => {
     productOptionsModalKey,
   );
   const { addLine, replaceLine } = useCartHook();
+  const discount = useStorefrontDiscountHook();
 
   const draft = useOptionsStore((s) => s.draft);
   const seedDraft = useOptionsStore((s) => s.seedDraft);
@@ -108,13 +111,23 @@ export const useProductOptionsHook = () => {
     [section, draft.addonIds],
   );
 
-  const unitPrice = useMemo(() => {
-    const base = Number(selectedSize?.price ?? 0);
-    const extras = selectedAddons.reduce((sum, addon) => sum + Number(addon.price), 0);
-    return base + extras;
-  }, [selectedSize, selectedAddons]);
+  /// A size's price after the shop-wide discount. The drink is discounted, the
+  /// add-ons are not — the same rule place_order charges by (0021).
+  const priceOf = useCallback(
+    (size: IProductSize) => discountedPrice(Number(size.price), discount),
+    [discount],
+  );
 
+  const addonsTotal = useMemo(
+    () => selectedAddons.reduce((sum, addon) => sum + Number(addon.price), 0),
+    [selectedAddons],
+  );
+
+  const unitPrice = (selectedSize ? priceOf(selectedSize) : 0) + addonsTotal;
   const total = unitPrice * draft.quantity;
+
+  /// The same selection at full price, struck through beside the total.
+  const listTotal = (Number(selectedSize?.price ?? 0) + addonsTotal) * draft.quantity;
 
   const open = useCallback(
     (next: IProductOptionsPayload) => openModal(next),
@@ -133,6 +146,8 @@ export const useProductOptionsHook = () => {
       imageUrl: product.image_url,
       sizeId: selectedSize.id,
       sizeLabel: selectedSize.label,
+      // The LIST price. The cart applies whatever discount is live when it is
+      // read, so switching the promo off reprices a cart already built.
       unitPrice: Number(selectedSize.price),
       temperature,
       sweetness: section.has_sweetness ? draft.sweetness : null,
@@ -182,6 +197,9 @@ export const useProductOptionsHook = () => {
     temperature,
     unitPrice,
     total,
+    listTotal,
+    isDiscounted: total < listTotal,
+    priceOf,
     open,
     close: closeModal,
     setSize,

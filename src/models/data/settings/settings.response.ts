@@ -1,3 +1,4 @@
+import type { DiscountTypeEnum } from "../../../enums/discount.enum";
 import type { PaymentMethodEnum } from "../../../enums/order.enum";
 
 /// The single row of public.app_settings (migration 0018).
@@ -29,6 +30,14 @@ export interface IAppSettings {
   bank_account_name: string | null;
   bank_account_number: string | null;
 
+  /// One shop-wide discount on every drink's size price (0021). Add-ons are
+  /// never discounted. place_order applies it; the screens only preview it.
+  discount_enabled: boolean;
+  discount_type: DiscountTypeEnum;
+  /// Percent (0–100) or pesos off each cup, depending on discount_type.
+  /// numeric(10,2), so PostgREST may hand it over as a string.
+  discount_value: number | string;
+
   updated_at: string;
   updated_by: string | null;
 }
@@ -59,4 +68,13 @@ export interface IStorefrontSettings {
   onlineSlug: string;
   qrUrl: string | null;
   paymentOptions: IPaymentOption[];
+  /// The discount every price on the menu is shown with, or null when it is
+  /// switched off or worth nothing.
+  discount: IDiscount | null;
+}
+
+/// A live discount, as the menu and the cart apply it.
+export interface IDiscount {
+  type: DiscountTypeEnum;
+  value: number;
 }

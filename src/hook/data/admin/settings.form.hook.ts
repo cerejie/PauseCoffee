@@ -6,8 +6,10 @@ import {
   appSettingsQueryKey,
   onlineOrderingOpenQueryKey,
 } from "../../../keys/query.keys";
+import { DiscountTypeEnum } from "../../../enums/discount.enum";
 import type {
   IAppSettingsPatch,
+  IDiscountSettingsFormRequest,
   IPaymentSettingsFormRequest,
   IShopSettingsFormRequest,
 } from "../../../models/data/settings/settings.request";
@@ -133,5 +135,53 @@ export const usePaymentSettingsHook = () => {
         bank_account_name: values.bank_account_name?.trim() || null,
         bank_account_number: values.bank_account_number?.trim() || null,
       }),
+  };
+};
+
+/// The Discount tab — one shop-wide discount, on or off, percent or pesos.
+/// Saving it changes every price on the menu and, more importantly, what
+/// place_order charges (0021).
+export const useDiscountSettingsHook = () => {
+  const [form] = Form.useForm<IDiscountSettingsFormRequest>();
+  const query = useSettingsQuery();
+  const mutation = useSettingsMutation("Discount saved");
+
+  useEffect(() => {
+    if (!query.data) return;
+
+    form.setFieldsValue({
+      discount_enabled: query.data.discount_enabled,
+      discount_type: query.data.discount_type ?? DiscountTypeEnum.Percent,
+      discount_value: Number(query.data.discount_value ?? 0) || null,
+    });
+  }, [query.data, form]);
+
+  /// "10" means something very different as a percent and as pesos, so the
+  /// number is cleared when the unit changes rather than silently reinterpreted.
+  const onTypeChange = (type: DiscountTypeEnum) => {
+    form.setFieldsValue({ discount_type: type, discount_value: null });
+  };
+
+  return {
+    form,
+    settings: query.data ?? null,
+    isLoading: query.isLoading,
+    isSaving: mutation.isPending,
+    onTypeChange,
+    onSubmit: (values: IDiscountSettingsFormRequest) => {
+      const raw = Number(values.discount_value ?? 0);
+      // Whole percent; pesos to the centavo — what numeric(10,2) holds and
+      // what the check constraint allows.
+      const value =
+        values.discount_type === DiscountTypeEnum.Percent
+          ? Math.min(Math.max(Math.round(raw), 0), 100)
+          : Math.max(Math.round(raw * 100) / 100, 0);
+
+      mutation.mutate({
+        discount_enabled: values.discount_enabled,
+        discount_type: values.discount_type,
+        discount_value: value,
+      });
+    },
   };
 };

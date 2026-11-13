@@ -440,6 +440,55 @@ export const cardPrice = style({
   },
 });
 
+// ----------------------------------------------------------------- discount
+
+/// The label line ("from", "12 oz") with the discount tag riding beside it.
+export const cardPriceTop = style({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  gap: 6,
+});
+
+/// "10% off" in words — the strike-through alone would leave the reason to be
+/// guessed. A solid accent fill, so it reads in every category colour.
+export const cardDiscountTag = style({
+  fontSize: 9.5,
+  fontWeight: 700,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  lineHeight: 1,
+  padding: "3px 6px",
+  borderRadius: radiusPill,
+  color: accentOn,
+  backgroundColor: accent,
+  whiteSpace: "nowrap",
+  "@media": {
+    "screen and (max-width: 640px)": { fontSize: 8.5, padding: "3px 5px" },
+  },
+});
+
+/// New price first, the old one after it and quieter.
+export const cardPriceRow = style({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "baseline",
+  columnGap: 6,
+  rowGap: 2,
+});
+
+export const cardPriceWas = style({
+  fontFamily: fontBody,
+  fontSize: 12.5,
+  fontWeight: 500,
+  color: colorTextMuted,
+  textDecoration: "line-through",
+  lineHeight: 1.1,
+  "@media": {
+    "screen and (max-width: 640px)": { fontSize: 11.5 },
+  },
+});
+
 export const cardAdd = style({
   flexShrink: 0,
   width: 36,

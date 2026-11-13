@@ -1,4 +1,5 @@
 import type { Dayjs } from "dayjs";
+import type { DiscountTypeEnum } from "../../../enums/discount.enum";
 import type { IAppSettings } from "./settings.response";
 
 /// A partial write. Each tab of the Settings screen sends only its own fields,
@@ -31,4 +32,12 @@ export interface IPaymentSettingsFormRequest {
   bank_name?: string;
   bank_account_name?: string;
   bank_account_number?: string;
+}
+
+/// The Discount tab's field shape. The value is a percent or pesos depending
+/// on the type; the hook rounds it to what the column can hold.
+export interface IDiscountSettingsFormRequest {
+  discount_enabled: boolean;
+  discount_type: DiscountTypeEnum;
+  discount_value: number | null;
 }

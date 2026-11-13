@@ -191,6 +191,23 @@ export const optionTileMeta = style({
   color: colorTextMuted,
 });
 
+/// A discounted size: the price it is now, then the one it was.
+export const optionTileMetaNow = style({
+  fontWeight: 700,
+  color: colorTextHeading,
+});
+
+export const optionTileMetaWas = style({
+  textDecoration: "line-through",
+});
+
+/// The full-price total, struck through inside the Add to cart button.
+export const submitWas = style({
+  fontSize: 12.5,
+  fontWeight: 500,
+  textDecoration: "line-through",
+});
+
 // ------------------------------------------------------------------- add-ons
 
 export const addonList = style({

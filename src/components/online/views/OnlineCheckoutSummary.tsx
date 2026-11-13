@@ -1,4 +1,4 @@
-import { ArrowRightOutlined, PhoneOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, PhoneOutlined, TagOutlined } from "@ant-design/icons";
 import { Form, Input, Skeleton } from "antd";
 import { Suspense, lazy } from "react";
 import {
@@ -7,11 +7,13 @@ import {
   onlineOrderTypes,
   type PaymentMethodEnum,
 } from "../../../enums/order.enum";
+import { useCartHook } from "../../../hook/data/cart/cart.hook";
 import type { useOnlineOrderFormHook } from "../../../hook/data/online/online.order.form.hook";
 import type { IPaymentOption } from "../../../models/data/settings/settings.response";
 import PaymentProofField from "../form/PaymentProofField";
 import PaymentQrPanel from "./PaymentQrPanel";
 import OrderTypePicker from "../../cart/views/OrderTypePicker";
+import { discountLabel } from "../../../utils/discount.utils";
 import { formatPeso } from "../../../utils/formatter.utils";
 import { staggerDelay } from "../../../utils/motion.utils";
 import { fade, rise } from "../../../styles/common/motion.css";
@@ -24,6 +26,8 @@ import {
   summaryFooter,
   summaryHead,
   summaryTitle,
+  totalsDiscount,
+  totalsDiscountLabel,
   totalsDivider,
   totalsGrand,
   totalsGrandLabel,
@@ -62,6 +66,7 @@ const phonePattern = /^(?:\+?63|0)9\d{9}$/;
 const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
   const { form, itemCount, subtotal, storefront, isPlacing, initialValues, onSubmit } =
     checkout;
+  const { originalSubtotal, discountTotal } = useCartHook();
 
   const orderType = Form.useWatch("order_type", form);
   const method = Form.useWatch("payment_method", form);
@@ -233,8 +238,18 @@ const OnlineCheckoutSummary = ({ checkout }: OnlineCheckoutSummaryProps) => {
             <span>
               {itemCount} {itemCount === 1 ? "drink" : "drinks"}
             </span>
-            <span>{formatPeso(subtotal)}</span>
+            <span>{formatPeso(originalSubtotal)}</span>
           </div>
+
+          {storefront.discount && discountTotal > 0 ? (
+            <div className={`${totalsRow} ${totalsDiscount}`}>
+              <span className={totalsDiscountLabel}>
+                <TagOutlined aria-hidden />
+                Discount · {discountLabel(storefront.discount)}
+              </span>
+              <span>−{formatPeso(discountTotal)}</span>
+            </div>
+          ) : null}
 
           <div className={totalsGrand}>
             <span className={totalsGrandLabel}>Total</span>

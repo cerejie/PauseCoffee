@@ -8,14 +8,25 @@ import {
   stepperValue,
   submit,
   submitDivider,
+  submitWas,
 } from "../../../styles/menu/options.drawer.css";
+import { visuallyHidden } from "../../../styles/common/global.css";
 
 interface ProductOptionsFooterProps {
   options: ReturnType<typeof useProductOptionsHook>;
 }
 
 const ProductOptionsFooter = ({ options }: ProductOptionsFooterProps) => {
-  const { draft, setQuantity, submit: commit, total, editing, selectedSize } = options;
+  const {
+    draft,
+    setQuantity,
+    submit: commit,
+    total,
+    listTotal,
+    isDiscounted,
+    editing,
+    selectedSize,
+  } = options;
 
   return (
     <div className={footer}>
@@ -50,6 +61,12 @@ const ProductOptionsFooter = ({ options }: ProductOptionsFooterProps) => {
         <ShoppingOutlined />
         {editing ? "Update" : "Add to cart"}
         <span className={submitDivider} />
+        {isDiscounted ? (
+          <s className={submitWas}>
+            <span className={visuallyHidden}>was </span>
+            {formatPeso(listTotal)}
+          </s>
+        ) : null}
         {formatPeso(total)}
       </button>
     </div>

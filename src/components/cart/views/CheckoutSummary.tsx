@@ -1,8 +1,11 @@
-import { ArrowRightOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, TagOutlined } from "@ant-design/icons";
 import { Form, Input } from "antd";
 import { inStoreOrderTypes, orderTypeLabel } from "../../../enums/order.enum";
 import OrderTypePicker from "./OrderTypePicker";
+import { useCartHook } from "../../../hook/data/cart/cart.hook";
 import type { useOrderFormHook } from "../../../hook/data/order/order.form.hook";
+import { useStorefrontDiscountHook } from "../../../hook/data/settings/settings.hook";
+import { discountLabel } from "../../../utils/discount.utils";
 import { formatPeso } from "../../../utils/formatter.utils";
 import {
   fieldLabel,
@@ -13,6 +16,8 @@ import {
   summaryFooter,
   summaryHead,
   summaryTitle,
+  totalsDiscount,
+  totalsDiscountLabel,
   totalsDivider,
   totalsGrand,
   totalsGrandLabel,
@@ -28,6 +33,8 @@ interface CheckoutSummaryProps {
 /// the counter. antd Form owns the field values — never a store.
 const CheckoutSummary = ({ checkout }: CheckoutSummaryProps) => {
   const { form, itemCount, subtotal, isPlacing, initialValues, onSubmit } = checkout;
+  const { originalSubtotal, discountTotal } = useCartHook();
+  const discount = useStorefrontDiscountHook();
 
   return (
     <aside className={summary}>
@@ -93,8 +100,18 @@ const CheckoutSummary = ({ checkout }: CheckoutSummaryProps) => {
             <span>
               {itemCount} {itemCount === 1 ? "drink" : "drinks"}
             </span>
-            <span>{formatPeso(subtotal)}</span>
+            <span>{formatPeso(originalSubtotal)}</span>
           </div>
+
+          {discount && discountTotal > 0 ? (
+            <div className={`${totalsRow} ${totalsDiscount}`}>
+              <span className={totalsDiscountLabel}>
+                <TagOutlined aria-hidden />
+                Discount · {discountLabel(discount)}
+              </span>
+              <span>−{formatPeso(discountTotal)}</span>
+            </div>
+          ) : null}
 
           <div className={totalsGrand}>
             <span className={totalsGrandLabel}>Total</span>

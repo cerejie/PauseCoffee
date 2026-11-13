@@ -1,8 +1,10 @@
 import { CheckOutlined } from "@ant-design/icons";
 import { Input } from "antd";
+import type { ReactNode } from "react";
 import { sweetnessLevels, temperatureLabel } from "../../../enums/order.enum";
 import type { useProductOptionsHook } from "../../../hook/data/menu/product.options.hook";
 import { formatPeso } from "../../../utils/formatter.utils";
+import { visuallyHidden } from "../../../styles/common/global.css";
 import {
   addonCheck,
   addonCheckActive,
@@ -22,6 +24,8 @@ import {
   optionTileActive,
   optionTileLabel,
   optionTileMeta,
+  optionTileMetaNow,
+  optionTileMetaWas,
 } from "../../../styles/menu/options.drawer.css";
 
 type OptionsHook = ReturnType<typeof useProductOptionsHook>;
@@ -37,7 +41,7 @@ const OptionTile = ({
   onClick,
 }: {
   label: string;
-  meta?: string;
+  meta?: ReactNode;
   active: boolean;
   onClick: () => void;
 }) => (
@@ -67,6 +71,7 @@ const ProductOptionsBody = ({ options }: ProductOptionsBodyProps) => {
     setSweetness,
     toggleAddon,
     setNotes,
+    priceOf,
   } = options;
 
   if (!section) return null;
@@ -82,15 +87,32 @@ const ProductOptionsBody = ({ options }: ProductOptionsBodyProps) => {
             ) : null}
           </div>
           <div className={optionRow}>
-            {sizes.map((size) => (
-              <OptionTile
-                key={size.id}
-                label={size.label}
-                meta={formatPeso(size.price)}
-                active={draft.sizeId === size.id}
-                onClick={() => setSize(size.id)}
-              />
-            ))}
+            {sizes.map((size) => {
+              const price = priceOf(size);
+              const listPrice = Number(size.price);
+
+              return (
+                <OptionTile
+                  key={size.id}
+                  label={size.label}
+                  meta={
+                    price < listPrice ? (
+                      <>
+                        <span className={optionTileMetaNow}>{formatPeso(price)}</span>{" "}
+                        <s className={optionTileMetaWas}>
+                          <span className={visuallyHidden}>was </span>
+                          {formatPeso(listPrice)}
+                        </s>
+                      </>
+                    ) : (
+                      formatPeso(listPrice)
+                    )
+                  }
+                  active={draft.sizeId === size.id}
+                  onClick={() => setSize(size.id)}
+                />
+              );
+            })}
           </div>
         </div>
       )}

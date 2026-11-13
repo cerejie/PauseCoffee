@@ -6,12 +6,39 @@ import {
   onlineOrderingOpenQueryKey,
 } from "../../../keys/query.keys";
 import type {
+  IAppSettings,
+  IDiscount,
   IPaymentOption,
   IStorefrontSettings,
 } from "../../../models/data/settings/settings.response";
 import { defaultOnlineSlug } from "../../../constants/online.constants";
 import { settingsServices } from "../../../services/data/settings/settings.services";
 import { menuImageUrl } from "../../../utils/storage.utils";
+
+const useAppSettingsQuery = () =>
+  useQuery({
+    queryKey: [appSettingsQueryKey],
+    queryFn: () => settingsServices.getSettings(),
+    // Money details and trading hours change rarely; a minute of staleness
+    // saves a request on every screen that renders the QR.
+    staleTime: 60_000,
+  });
+
+/// The live discount, or null when it is switched off or worth nothing.
+/// numeric arrives from PostgREST as a string, hence the Number().
+const toDiscount = (settings: IAppSettings | null): IDiscount | null => {
+  if (!settings?.discount_enabled) return null;
+  const value = Number(settings.discount_value ?? 0);
+  return value > 0 ? { type: settings.discount_type, value } : null;
+};
+
+/// Just the discount, for the menu, the options drawer and the cart. Both the
+/// in-store and the online app read it, and the in-store one has no business
+/// polling the online trading window to learn a price.
+export const useStorefrontDiscountHook = (): IDiscount | null => {
+  const { data } = useAppSettingsQuery();
+  return useMemo(() => toDiscount(data ?? null), [data]);
+};
 
 /// The shop as a customer sees it: whether it is taking orders, how to pay, and
 /// how to reach it. Read by the online app, which has no session — the settings
@@ -22,13 +49,7 @@ import { menuImageUrl } from "../../../utils/storage.utils";
 /// customer's device clock must not be able to disagree with it and show an
 /// open shop that then rejects them at checkout.
 export const useStorefrontSettingsHook = () => {
-  const settingsQuery = useQuery({
-    queryKey: [appSettingsQueryKey],
-    queryFn: () => settingsServices.getSettings(),
-    // Money details and trading hours change rarely; a minute of staleness
-    // saves a request on every screen that renders the QR.
-    staleTime: 60_000,
-  });
+  const settingsQuery = useAppSettingsQuery();
 
   const openQuery = useQuery({
     queryKey: [onlineOrderingOpenQueryKey],
@@ -75,6 +96,7 @@ export const useStorefrontSettingsHook = () => {
       onlineSlug: settings?.online_slug ?? defaultOnlineSlug,
       qrUrl: menuImageUrl(settings?.payment_qr_path),
       paymentOptions: options,
+      discount: toDiscount(settings),
     };
   }, [settings, isOpen]);
 

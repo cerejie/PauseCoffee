@@ -1,4 +1,5 @@
 import { Tabs } from "antd";
+import DiscountSettingsForm from "../../components/admin/settings/DiscountSettingsForm";
 import PaymentSettingsForm from "../../components/admin/settings/PaymentSettingsForm";
 import ShopSettingsForm from "../../components/admin/settings/ShopSettingsForm";
 import UserTable from "../../components/admin/users/UserTable";
@@ -23,6 +24,7 @@ const SettingsView = () => {
       items={[
         { key: "shop", label: "Shop", children: <ShopSettingsForm /> },
         { key: "payment", label: "Payment", children: <PaymentSettingsForm /> },
+        { key: "discount", label: "Discount", children: <DiscountSettingsForm /> },
         ...(isSuperAdmin
           ? [{ key: "users", label: "Users", children: <UserTable /> }]
           : []),

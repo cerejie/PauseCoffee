@@ -231,6 +231,33 @@ globalStyle(`${qrActions} .ant-btn`, {
   borderRadius: radiusSm,
 });
 
+// ----------------------------------------------------------------- discount
+
+/// "A ₱150 drink becomes ~~₱150~~ ₱135" — the owner's number, made concrete.
+export const discountExample = style({
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "baseline",
+  gap: 8,
+  marginTop: 14,
+  padding: "12px 14px",
+  borderRadius: radiusSm,
+  backgroundColor: colorSurfaceAlt,
+  color: colorTextBody,
+  fontSize: 13.5,
+});
+
+export const discountExampleWas = style({
+  color: colorTextMuted,
+  textDecorationThickness: 1.5,
+});
+
+export const discountExampleNew = style({
+  color: colorTextHeading,
+  fontSize: 16,
+  fontWeight: 700,
+});
+
 // ------------------------------------------------------------------- footer
 
 export const footer = style({

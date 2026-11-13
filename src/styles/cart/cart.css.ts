@@ -134,6 +134,21 @@ export const linePrice = style({
   whiteSpace: "nowrap",
 });
 
+/// The line's price with, under a discount, its full price struck beneath.
+export const linePriceStack = style({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  gap: 2,
+});
+
+export const linePriceWas = style({
+  fontSize: 12,
+  color: colorTextMuted,
+  textDecoration: "line-through",
+  whiteSpace: "nowrap",
+});
+
 export const stepper = style({
   display: "flex",
   alignItems: "center",
@@ -250,6 +265,20 @@ export const totalsRow = style({
   justifyContent: "space-between",
   fontSize: 13.5,
   color: colorTextBody,
+});
+
+/// "Discount · 10% off   −₱45". Heading ink rather than a green: the brand
+/// green is under 4.5:1 on the surface, and the minus sign and the word already
+/// say what the row is.
+export const totalsDiscount = style({
+  fontWeight: 600,
+  color: colorTextHeading,
+});
+
+export const totalsDiscountLabel = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
 });
 
 export const totalsDivider = style({

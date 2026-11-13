@@ -1,18 +1,25 @@
 import { PlusOutlined } from "@ant-design/icons";
 import ProductImage from "../../common/media/ProductImage";
 import { useAccentVars } from "../../../hook/common/accent.hook";
+import { useStorefrontDiscountHook } from "../../../hook/data/settings/settings.hook";
 import type { IMenuSection, IProduct } from "../../../models/data/menu/menu.response";
+import { discountedPrice, discountLabel } from "../../../utils/discount.utils";
 import { formatPeso } from "../../../utils/formatter.utils";
+import { visuallyHidden } from "../../../styles/common/global.css";
 import {
   card,
   cardAdd,
   cardBadge,
   cardBody,
   cardDescription,
+  cardDiscountTag,
   cardFoot,
   cardPrice,
   cardPriceBlock,
   cardPriceLabel,
+  cardPriceRow,
+  cardPriceTop,
+  cardPriceWas,
   cardTitle,
 } from "../../../styles/menu/menu.css";
 import { mediaCard } from "../../../styles/common/media.css";
@@ -31,6 +38,12 @@ const ProductCard = ({ product, section, onSelect }: ProductCardProps) => {
     (low, size) => (Number(size.price) < low ? Number(size.price) : low),
     Number(sizes[0]?.price ?? 0),
   );
+
+  // The cheapest size stays the cheapest after a uniform discount, so the
+  // "from" floor is simply discounted too.
+  const discount = useStorefrontDiscountHook();
+  const price = discountedPrice(cheapest, discount);
+  const isDiscounted = price < cheapest;
 
   return (
     <button
@@ -54,10 +67,23 @@ const ProductCard = ({ product, section, onSelect }: ProductCardProps) => {
           <span className={cardPriceBlock}>
             {/* One size is a fact — "12 oz". Several is a floor, and the
                 drawer is where the customer picks which one. */}
-            <span className={cardPriceLabel}>
-              {sizes.length > 1 ? "from" : sizes[0]?.label}
+            <span className={cardPriceTop}>
+              <span className={cardPriceLabel}>
+                {sizes.length > 1 ? "from" : sizes[0]?.label}
+              </span>
+              {isDiscounted && discount ? (
+                <span className={cardDiscountTag}>{discountLabel(discount)}</span>
+              ) : null}
             </span>
-            <span className={cardPrice}>{formatPeso(cheapest)}</span>
+            <span className={cardPriceRow}>
+              <span className={cardPrice}>{formatPeso(price)}</span>
+              {isDiscounted ? (
+                <s className={cardPriceWas}>
+                  <span className={visuallyHidden}>was </span>
+                  {formatPeso(cheapest)}
+                </s>
+              ) : null}
+            </span>
           </span>
 
           <span className={cardAdd}>

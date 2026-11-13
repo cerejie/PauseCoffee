@@ -2,8 +2,9 @@ import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import ProductImage from "../../common/media/ProductImage";
 import { useAccentVars } from "../../../hook/common/accent.hook";
 import { temperatureLabel } from "../../../enums/order.enum";
-import type { ICartLine } from "../../../models/data/order/cart.model";
+import { cartLineTotal, type ICartLine } from "../../../models/data/order/cart.model";
 import { formatPeso } from "../../../utils/formatter.utils";
+import { visuallyHidden } from "../../../styles/common/global.css";
 import {
   line as lineClass,
   lineActions,
@@ -14,6 +15,8 @@ import {
   lineOptionChip,
   lineOptions,
   linePrice,
+  linePriceStack,
+  linePriceWas,
   lineTail,
   lineTitle,
   stepper,
@@ -38,6 +41,9 @@ const CartLineCard = ({
   onRemove,
 }: CartLineCardProps) => {
   const accentVars = useAccentVars(line.accentColor);
+  // The line at full price. `total` arrives already discounted, so any gap
+  // between the two is the shop-wide discount.
+  const listTotal = cartLineTotal(line);
 
   return (
     <article className={lineClass} style={accentVars}>
@@ -78,7 +84,15 @@ const CartLineCard = ({
       </div>
 
       <div className={lineTail}>
-        <span className={linePrice}>{formatPeso(total)}</span>
+        <span className={linePriceStack}>
+          <span className={linePrice}>{formatPeso(total)}</span>
+          {total < listTotal ? (
+            <s className={linePriceWas}>
+              <span className={visuallyHidden}>was </span>
+              {formatPeso(listTotal)}
+            </s>
+          ) : null}
+        </span>
         <div className={stepper}>
           <button
             type="button"
